@@ -14,10 +14,20 @@
   "scripts": {
     "prepublish": "tsc",
     "docs": "typedoc --out docs lib/index.ts",
-    "lint": "tslint src/**/*.ts"
+    "lint": "tslint src/**/*.ts",
+    "test": "mocha --opts mocha.opts",
+    "test:auto": "mocha --opts mocha.opts --watch",
+    "lint": "tslint src/**/*.ts",
+    "clean": "rm -rf dist"
   },
   "author": "Creative Curiosity",
   "devDependencies": {
+    "@types/mocha": "^2.2.33",
+    "@types/should": "^8.1.30",
+    "mocha": "^3.2.0",
+    "should": "^11.1.2",
+    "sqlite": "^2.2.4",
+    "ts-node": "^1.7.2",
     "tslint": "^4.0.2",
     "typedoc": "^0.5.1"
   },
@@ -33,7 +43,7 @@
     "koa-router": "^7.0.1",
     "lodash": "^4.17.2",
     "moment": "^2.17.0",
-    "squell": "^0.1.2",
+    "squell": "^0.2.0",
     "typescript": "^2.0.10"
   }
 }

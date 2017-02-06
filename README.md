@@ -1,6 +1,6 @@
 # Crea
 
-# Introduction
+## Introduction
 
 Crea is a full-stack Node.js web framework written in [TypeScript](http://typescript.org/). It is specifically
 designed for developing the backend REST APIs of web applications.
@@ -17,18 +17,34 @@ have the following Koa middleware enabled:
 * [koa-bodyparser 3.x](https://github.com/koajs/bodyparser)
 * [koa-router 7.x](https://github.com/koajs/bodyparser)
 
-# Installation
+## Installation
 
 ```
 npm install --save crea
 ```
 
-# Documentation
+## Documentation
 
-To view Crea's documentation, clone this repository and run:
+The API documentation generated using [TypeDoc](https://github.com/TypeStrong/typedoc)
+is [available online](http://creativecuriosity.github.io/crea).
 
-```
+To generate API documentation from the code into the `docs` directory, run:
+
+```sh
 npm run docs
 ```
 
-This will generate HTML documentation into `docs`.
+## Testing
+
+First install the library dependencies and the SQLite3 library:
+
+```
+npm install
+npm install sqlite3
+```
+
+To execute the test suite using SQLite as the backend, run:
+
+```
+npm run test
+```

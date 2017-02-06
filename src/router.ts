@@ -2,7 +2,7 @@
  * Provides all routing functionality of a Crea application, based off koa-router.
  */
 
-import KoaRouter from 'koa-router';
+import * as KoaRouter from 'koa-router';
 
 import { User } from './user';
 
@@ -10,7 +10,7 @@ import { User } from './user';
  * The router handles routing in a Crea application and
  * is directly based off koa-router's implementation.
  */
-export default class Router extends KoaRouter {}
+export class Router extends KoaRouter {}
 
 /**
  * A Crea-specific implementation of koa-router's router context.

@@ -2,8 +2,8 @@
  * Provides the core features of a Crea application.
  */
 
-import KoaApplication from 'koa';
-import bodyParser from 'koa-bodyparser';
+import * as KoaApplication from 'koa';
+import * as bodyParser from 'koa-bodyparser';
 
 import Router from './router';
 
@@ -13,7 +13,7 @@ import Router from './router';
  * except we use some must-have/good-to-have middlewares
  * early on.
  */
-export abstract class Application extends KoaApplication {
+export class Application extends KoaApplication {
   /** Construct an application. */
   constructor() {
     super();

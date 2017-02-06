@@ -5,8 +5,7 @@
 import * as squell from 'squell';
 import * as _ from 'lodash';
 
-import Router from './router';
-import { RouterContext, Middleware } from './router';
+import { Router, RouterContext, Middleware } from './router';
 
 export interface ResourceFieldError {
   field: string;
@@ -147,7 +146,7 @@ let defaultUserHookOptions: ResourceHookOptions = {
  * A definition of a resource action's milestones,
  * with a default middleware for handling the action.
  */
-export interface ResourceMilestoneDefinition<T> {
+export interface ResourceMilestoneDefinition<T extends squell.Model> {
   action: ResourceAction;
   milestone: ResourceMilestone;
   mw: ResourceMiddleware<T>;
@@ -163,7 +162,7 @@ export interface ResourceMilestoneDefinition<T> {
  * This can be instantiated and its routes middleware used on the
  * relevant path for the resource.
  */
-export default class Resource<T extends squell.Model> extends Router {
+export class Resource<T extends squell.Model> extends Router {
   /**
    * All of the before hooks added to the resource.
    *
@@ -464,7 +463,7 @@ export default class Resource<T extends squell.Model> extends Router {
 
     // Kinda hacky, but we have to do this to make sure
     // we're fetching by whatever primary key they've defined.
-    ctx.query = ctx.query.where(_ => db.getModelPrimary(this.model));
+    ctx.query = ctx.query.where(_ => db.getModelPrimary(this.model).eq(ctx.params.id));
 
     return ResourceStatus.CONTINUE;
   }
@@ -476,7 +475,7 @@ export default class Resource<T extends squell.Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async readFetch(ctx: ResourceContext<T>): Promise<ResourceStatus> {
-    ctx.data = ctx.query.findOne();
+    ctx.data = await ctx.query.findOne();
 
     return ResourceStatus.CONTINUE;
   }
