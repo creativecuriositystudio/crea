@@ -1,10 +1,7 @@
 /**
  * Provides all routing functionality of a Crea application, based off koa-router.
  */
-
 import * as KoaRouter from 'koa-router';
-
-import { User } from './user';
 
 /**
  * The router handles routing in a Crea application and
@@ -25,7 +22,7 @@ export interface RouterContext extends KoaRouter.IRouterContext {
    *
    * @see Auth
    */
-  user?: User;
+  user?: any;
 }
 
 /**

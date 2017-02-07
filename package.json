@@ -3,7 +3,18 @@
   "version": "0.1.0",
   "main": "dist/index.js",
   "bugs": "https://github.com/creativecuriositystudio/crea/issues",
-  "keywords": ["koa", "sequelize", "squell", "rest", "web", "framework", "auth", "models", "controller", "mvc"],
+  "keywords": [
+    "koa",
+    "sequelize",
+    "squell",
+    "rest",
+    "web",
+    "framework",
+    "auth",
+    "models",
+    "controller",
+    "mvc"
+  ],
   "homepage": "https://github.com/creativecuriositystudio/crea",
   "license": "MIT",
   "description": "A full stack web framework designed for tight integration with frontend MVCs",
@@ -17,7 +28,6 @@
     "lint": "tslint src/**/*.ts",
     "test": "mocha --opts mocha.opts",
     "test:auto": "mocha --opts mocha.opts --watch",
-    "lint": "tslint src/**/*.ts",
     "clean": "rm -rf dist"
   },
   "author": "Creative Curiosity",
@@ -29,7 +39,7 @@
     "sqlite": "^2.2.4",
     "ts-node": "^1.7.2",
     "tslint": "^4.0.2",
-    "typedoc": "^0.5.1"
+    "typedoc": "^0.5.5"
   },
   "dependencies": {
     "@types/jwt-simple": "^0.5.32",
@@ -43,7 +53,7 @@
     "koa-router": "^7.0.1",
     "lodash": "^4.17.2",
     "moment": "^2.17.0",
-    "squell": "^0.2.0",
-    "typescript": "^2.0.10"
+    "squell": "^0.2.4",
+    "typescript": "^2.1.4"
   }
 }

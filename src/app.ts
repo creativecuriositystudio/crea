@@ -1,7 +1,6 @@
 /**
  * Provides the core features of a Crea application.
  */
-
 import * as KoaApplication from 'koa';
 import * as bodyParser from 'koa-bodyparser';
 
