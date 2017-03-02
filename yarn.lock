@@ -1718,6 +1718,10 @@ tsconfig@^5.0.2:
     strip-bom "^2.0.0"
     strip-json-comments "^2.0.0"
 
+tslint-config-ccs@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/tslint-config-ccs/-/tslint-config-ccs-0.2.0.tgz#3886592da642ed09e3ee1776760e1860018958f4"
+
 tslint@^4.0.2:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/tslint/-/tslint-4.0.2.tgz#d43f24c0c1f826de7f3a097bb7808a8b4325feac"
