@@ -541,7 +541,7 @@ export class Resource<T extends squell.Model> extends Router {
    *                    automatically setup if true.
    * @returns A promise handling the request.
    */
-  private async handleStart(ctx: ResourceContext<T>, singleQuery = false): Promise<ResourceStatus> {
+  protected async handleStart(ctx: ResourceContext<T>, singleQuery = false): Promise<ResourceStatus> {
     let db = this.db;
 
     ctx.resource = {
@@ -564,7 +564,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleSend(ctx: ResourceContext<T>, singleQuery = false): Promise<ResourceStatus> {
+  protected async handleSend(ctx: ResourceContext<T>, singleQuery = false): Promise<ResourceStatus> {
     if (!ctx.resource.data) {
       throw new ResourceError(404, 'Not Found');
     }
@@ -584,7 +584,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promsie handling the request.
    */
-  private async handleFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return ResourceStatus.CONTINUE;
   }
 
@@ -594,7 +594,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleListStart(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleListStart(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleStart(ctx);
   }
 
@@ -604,7 +604,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleListFetch(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleListFetch(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     ctx.resource.data = await ctx.resource.query.find();
 
     return ResourceStatus.CONTINUE;
@@ -616,7 +616,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleListSend(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleListSend(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleSend(ctx);
   }
 
@@ -626,7 +626,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleListFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleListFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleFinish(ctx);
   }
 
@@ -651,7 +651,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleReadStart(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleReadStart(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleStart(ctx, true);
   }
 
@@ -661,7 +661,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleReadFetch(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleReadFetch(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     ctx.resource.data = await ctx.resource.query.findOne();
 
     return ResourceStatus.CONTINUE;
@@ -673,7 +673,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleReadSend(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleReadSend(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleSend(ctx);
   }
 
@@ -683,7 +683,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleReadFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleReadFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleFinish(ctx);
   }
 
@@ -708,7 +708,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleCreateStart(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleCreateStart(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleStart(ctx);
   }
 
@@ -718,7 +718,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleCreateWrite(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleCreateWrite(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     ctx.resource.data = await ctx.resource.query.create(ctx.request.body as T);
 
     return ResourceStatus.CONTINUE;
@@ -730,7 +730,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleCreateSend(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleCreateSend(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleSend(ctx);
   }
 
@@ -740,7 +740,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleCreateFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleCreateFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleFinish(ctx);
   }
 
@@ -765,7 +765,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleUpdateStart(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleUpdateStart(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleStart(ctx, true);
   }
 
@@ -775,7 +775,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleUpdateFetch(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleUpdateFetch(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     ctx.resource.data = await ctx.resource.query.findOne();
 
     return ResourceStatus.CONTINUE;
@@ -787,7 +787,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleUpdateWrite(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleUpdateWrite(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     await ctx.resource.query.update(ctx.request.body as Partial<T>);
 
     // We reload. Kind of suboptimal but our only solution right now.
@@ -802,7 +802,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleUpdateSend(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleUpdateSend(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleSend(ctx);
   }
 
@@ -812,7 +812,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleUpdateFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleUpdateFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleFinish(ctx);
   }
 
@@ -838,7 +838,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleDeleteStart(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleDeleteStart(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleStart(ctx, true);
   }
 
@@ -848,7 +848,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleDeleteFetch(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleDeleteFetch(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     ctx.resource.data = await ctx.resource.query.findOne();
 
     return ResourceStatus.CONTINUE;
@@ -860,7 +860,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleDeleteWrite(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleDeleteWrite(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     // Throw a 404 if we haven't fetched anything.
     // We can't successfully delete without finding something first.
     if (!ctx.resource.data) {
@@ -881,7 +881,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleDeleteSend(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleDeleteSend(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     // Send an empty body to indicate a successful delete.
     ctx.body = {};
 
@@ -894,7 +894,7 @@ export class Resource<T extends squell.Model> extends Router {
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
-  private async handleDeleteFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
+  protected async handleDeleteFinish(ctx: ResourceContext<T>): Promise<ResourceStatus> {
     return this.handleFinish(ctx);
   }
 
