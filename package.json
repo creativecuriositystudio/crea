@@ -1,8 +1,8 @@
 {
-  "name": "crea",
+  "name": "restla",
   "version": "0.1.0",
   "main": "dist/index.js",
-  "bugs": "https://github.com/creativecuriositystudio/crea/issues",
+  "bugs": "https://github.com/creativecuriositystudio/restla/issues",
   "keywords": [
     "koa",
     "sequelize",
@@ -15,17 +15,19 @@
     "controller",
     "mvc"
   ],
-  "homepage": "https://github.com/creativecuriositystudio/crea",
+  "homepage": "https://github.com/creativecuriositystudio/restla",
   "license": "MIT",
   "description": "A full stack web framework designed for tight integration with frontend MVCs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/creativecuriositystudio/crea.git"
+    "url": "https://github.com/creativecuriositystudio/restla.git"
   },
   "types": "./dist/index.d.ts",
   "scripts": {
+    "prepush": "npm run lint && npm run test",
     "prepublish": "tsc",
     "build": "tsc",
+    "build:auto": "tsc --watch",
     "docs": "typedoc --out docs lib/index.ts",
     "lint": "tslint --format stylish --type-check --project tsconfig.json",
     "test": "mocha --opts mocha.opts",
@@ -36,12 +38,13 @@
   "devDependencies": {
     "@types/mocha": "^2.2.33",
     "@types/should": "^8.1.30",
+    "husky": "^0.13.2",
     "mocha": "^3.2.0",
     "should": "^11.1.2",
     "sqlite": "^2.2.4",
     "ts-node": "^1.7.2",
     "tslint": "^4.0.2",
-    "tslint-config-ccs": "^0.2.0",
+    "tslint-config-ccs": "^0.3.4",
     "typedoc": "^0.5.5"
   },
   "dependencies": {

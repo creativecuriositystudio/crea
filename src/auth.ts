@@ -10,8 +10,8 @@ import moment from 'moment';
 import * as squell from 'squell';
 import * as _ from 'lodash';
 
+import { ApplicationError } from './app';
 import { RouterContext, Middleware } from './router';
-import { ResourceError } from './resource';
 
 /** Raised when a user is not found during authentication. */
 export class UserNotFoundError extends Error {
