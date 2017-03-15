@@ -122,13 +122,16 @@ export interface ApplicationContext {
  * early on.
  */
 export class Application extends KoaApplication {
+  /** The context for the application. */
   protected ctx: ApplicationContext;
 
   /** Construct an application. */
-  constructor(appCtx?: Partial<ApplicationContext>) {
+  constructor(ctx?: Partial<ApplicationContext>) {
     super();
 
-    appCtx = {
+    let this_ = this;
+
+    this.ctx = {
       /** Handles sending an error. */
       async error(this: RouterContext, err: Error | ApplicationError): Promise<any> {
         let coerced: ApplicationError = <ApplicationError> err;
@@ -177,16 +180,14 @@ export class Application extends KoaApplication {
         this.body = instances;
       },
 
-      ... appCtx
+      ... ctx
     };
-
-    this.ctx = appCtx as ApplicationContext;
 
     this.use(async (ctx: RouterContext, next: () => Promise<any>) => {
       // We extend the context manually so we can magically bind any functions
       // to the router context.
-      for (let key of Object.keys(appCtx)) {
-        let value = appCtx[key];
+      for (let key of Object.keys(this_.ctx)) {
+        let value = this_.ctx[key];
 
         if (typeof (value) === 'function') {
           ctx[key] = value.bind(ctx);

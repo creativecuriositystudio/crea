@@ -44,14 +44,15 @@
     "@types/should": "^8.1.30",
     "husky": "^0.13.2",
     "mocha": "^3.2.0",
+    "modelsafe": "^0.3.0",
     "should": "^11.1.2",
     "sqlite": "^2.2.4",
-    "ts-node": "^1.7.2",
-    "tslint": "^4.0.2",
-    "tslint-config-ccs": "^0.3.5",
-    "typedoc": "^0.5.5",
     "squell": "^0.3.1",
-    "modelsafe": "^0.3.0"
+    "ts-node": "^1.7.2",
+    "tslint": "^4.5.1",
+    "tslint-config-ccs": "^0.3.6",
+    "typedoc": "^0.5.5",
+    "sequelize": "^4.0.0-2"
   },
   "dependencies": {
     "@types/jwt-simple": "^0.5.32",

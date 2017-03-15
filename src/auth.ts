@@ -187,7 +187,7 @@ export abstract class Auth<T> {
    * @param id The identifier.
    * @returns  A promise that resolves to the user model, or rejects if not found.
    */
-  protected abstract getUser(id: string): Promise<T>;
+  protected abstract async getUser(id: string): Promise<T>;
 
   /**
    * An abstract method that fetches the identifier for a specific user
@@ -219,7 +219,7 @@ export abstract class Auth<T> {
    * @rejects UserNotFoundError, Error
    * @see login
    */
-  protected loginUser(ctx: RouterContext): Promise<T> {
+  protected async loginUser(ctx: RouterContext): Promise<T> {
     throw new Error('Login unimplemented');
   }
 
@@ -238,7 +238,7 @@ export abstract class Auth<T> {
    * @rejects Error
    * @see login
    */
-  protected registerUser(ctx: RouterContext): Promise<T> {
+  protected async registerUser(ctx: RouterContext): Promise<T> {
     throw new Error('Register unimplemented');
   }
 
@@ -259,7 +259,7 @@ export abstract class Auth<T> {
    * @returns A promise handling the error response.
    */
   protected async handleError(err: Error, ctx: RouterContext, next: () => Promise<any>): Promise<any> {
-    return (ctx.error.bind(ctx))(err);
+    return ctx.error(err);
   }
 
   /**
@@ -280,7 +280,7 @@ export abstract class Auth<T> {
       ... options
     };
 
-    let self = this;
+    let this_ = this;
     let header = options.header.toLowerCase();
 
     return async (ctx: RouterContext, next: () => Promise<any>): Promise<any> => {
@@ -291,7 +291,7 @@ export abstract class Auth<T> {
           return next();
         }
 
-        return self.handleError(new TokenInvalidError('No token header set'), ctx, next);
+        return this_.handleError(new TokenInvalidError('No token header set'), ctx, next);
       }
 
       // The bearer token is always has the prefix of 'bearer <token>',
@@ -301,7 +301,7 @@ export abstract class Auth<T> {
       try {
         ctx.user = await this.consumeToken(token);
       } catch (err) {
-        return self.handleError(err, ctx, next);
+        return this_.handleError(err, ctx, next);
       }
 
       // Keep going along the chain, with the user available.

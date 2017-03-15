@@ -1,32 +1,36 @@
+import * as modelsafe from 'modelsafe';
 import * as squell from 'squell';
-import { model, attr, validate } from 'squell';
 
 /**
  * The president model, defined using Squell.
  */
-@model('president')
-export default class President extends squell.Model {
-  @attr(squell.INTEGER, { primaryKey: true, autoIncrement: true })
+@modelsafe.model()
+export class President extends modelsafe.Model {
+  @modelsafe.attr(modelsafe.INTEGER, { primary: true })
+  @squell.attr({ autoIncrement: true })
   public id: number;
 
-  @attr(squell.STRING, { allowNull: false })
+  @modelsafe.attr(modelsafe.STRING)
+  @squell.attr({ allowNull: false })
   public givenNames: string;
 
-  @attr(squell.STRING, { allowNull: false })
+  @modelsafe.attr(modelsafe.STRING)
+  @squell.attr({ allowNull: false })
   public lastName: string;
 
-  @attr(squell.BOOLEAN, { defaultValue: false })
+  @modelsafe.attr(modelsafe.STRING)
+  @squell.attr({ defaultValue: false })
   public active: boolean;
 
-  @attr(squell.DATE)
+  @modelsafe.attr(modelsafe.DATE)
   public electedAt: Date;
 
-  @attr(squell.DATE)
+  @modelsafe.attr(modelsafe.DATE)
   public inauguratedAt: Date;
 
-  @attr(squell.DATE)
+  @modelsafe.attr(modelsafe.DATE)
   public createdAt: Date;
 
-  @attr(squell.DATE)
+  @modelsafe.attr(modelsafe.DATE)
   public updatedAt: Date;
 }

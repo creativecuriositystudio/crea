@@ -137,20 +137,30 @@ export class Resource<T extends Model> extends Router {
     }
   }
 
+  /**
+   * Process a list of resource middlewares in the order given.
+   * This will run them through a promise chain and continue
+   * until the `next` function is not called.
+   *
+   * @param ctx The resource context.
+   * @param mws The resurce middlewares to process.
+   */
   private async process(ctx: ResourceContext<T>, mws: ResourceMiddleware<T>[]) {
-    let self = this;
+    let this_ = this;
 
     return mws.reduce(async (promise, mw) => {
       let result = await promise;
 
+      // If the last promise returned false, then that means
+      // it didn't call next and the request should be halted.
       if (!result) {
-        return;
+        return false;
       }
 
       let cont = false;
-      let next = () => cont = true;
+      let next = async () => cont = true;
 
-      await mw.bind(self)(ctx, next);
+      await mw.bind(this_)(ctx, next);
 
       return cont;
     }, Promise.resolve(true));
@@ -160,11 +170,10 @@ export class Resource<T extends Model> extends Router {
    * Handle starting a resource request.
    *
    * @param ctx The resource context.
-   * @param singleQuery Whether this is a fetch on a single resource. The query will been
-   *                    automatically setup if true.
+   * @param multiple Whether this is a fetch on multiple instances.
    * @returns A promise handling the request.
    */
-  protected async handleStart(ctx: ResourceContext<T>, singleQuery: boolean = false): Promise<any> {
+  protected async handleStart(ctx: ResourceContext<T>, next: () => Promise<any>, multiple: boolean = false): Promise<any> {
     let db = this.db;
 
     ctx.resource = {
@@ -172,29 +181,34 @@ export class Resource<T extends Model> extends Router {
       query: this.db.query(this.model)
     };
 
-    if (singleQuery) {
+    if (!multiple) {
       // Kinda hacky, but we have to do this to make sure
       // we're fetching by whatever primary key they've defined.
       ctx.resource.query = ctx.resource.query.where(_ => db.getInternalModelPrimary(this.model).eq(ctx.params.id));
     }
+
+    return next();
   }
 
   /**
    * Handle sending a resource request.
    *
    * @param ctx The resource context.
+   * @param multiple Whether this is a fetch on multiple instances.
    * @returns A promise handling the request.
    */
-  protected async handleSend(ctx: ResourceContext<T>, singleQuery: boolean = false): Promise<any> {
+  protected async handleSend(ctx: ResourceContext<T>, next: () => Promise<any>, multiple: boolean = false): Promise<any> {
     if (!ctx.resource.data) {
       throw new ApplicationError(404, 'Not Found');
     }
 
-    if ((<Partial<T>[]> ctx.resource.data).length) {
-      ctx.body = ctx.resource.data;
+    if (multiple) {
+      ctx.multiple(<Partial<T>[]> ctx.resource.data);
     } else {
-      ctx.body = ctx.resource.data;
+      ctx.single(<Partial<T>> ctx.resource.data);
     }
+
+    return next();
   }
 
   /**
@@ -203,8 +217,18 @@ export class Resource<T extends Model> extends Router {
    * @param ctx The resource context.
    * @returns A promsie handling the request.
    */
-  protected async handleFinish(ctx: ResourceContext<T>): Promise<any> {
-    // Do nothing. We just provide this so it can be overridden in a child class.
+  protected async handleFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before starting a resource list request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeListStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -214,7 +238,27 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleListStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleStart(ctx);
+    return this.handleStart(ctx, next, true);
+  }
+
+  /**
+   * Do something after starting a resource list request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterListStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before fetching a resource list request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeListFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -225,6 +269,28 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleListFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     ctx.resource.data = await ctx.resource.query.find();
+
+    return next();
+  }
+
+  /**
+   * Do something after fetching a resource list request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterListFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before sending a resource list request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeListSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -234,7 +300,27 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleListSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleSend(ctx);
+    return this.handleSend(ctx, next, true);
+  }
+
+  /**
+   * Do something after sending a resource list request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterListSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before finishing a resource list request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeListFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -244,7 +330,17 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleListFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleFinish(ctx);
+    return this.handleFinish(ctx, next);
+  }
+
+  /**
+   * Do something after finishing a resource list request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterListFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -255,11 +351,29 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleList(ctx: ResourceContext<T>): Promise<any> {
     return this.process(ctx, [
+      this.beforeListStart,
       this.handleListStart,
+      this.afterListStart,
+      this.beforeListFetch,
       this.handleListFetch,
+      this.afterListFetch,
+      this.beforeListSend,
       this.handleListSend,
-      this.handleListFinish
+      this.afterListSend,
+      this.beforeListFinish,
+      this.handleListFinish,
+      this.afterListFinish
     ]);
+  }
+
+  /**
+   * Do something before starting a resource read request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeReadStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -269,7 +383,27 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleReadStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleStart(ctx, true);
+    return this.handleStart(ctx, next);
+  }
+
+  /**
+   * Do something after starting a resource read request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterReadStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before fetching a resource read request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeReadFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -280,6 +414,28 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleReadFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     ctx.resource.data = await ctx.resource.query.findOne();
+
+    return next();
+  }
+
+  /**
+   * Do something after finishing a resource read request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterReadFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before sending a resource read request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeReadSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -289,7 +445,27 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleReadSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleSend(ctx);
+    return this.handleSend(ctx, next);
+  }
+
+  /**
+   * Do something after sending a resource read request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterReadSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before finishing a resource read request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeReadFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -299,7 +475,17 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleReadFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleFinish(ctx);
+    return this.handleFinish(ctx, next);
+  }
+
+  /**
+   * Do something after finishing a resource read request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterReadFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -310,11 +496,29 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleRead(ctx: ResourceContext<T>): Promise<any> {
     return this.process(ctx, [
+      this.beforeReadStart,
       this.handleReadStart,
+      this.afterReadStart,
+      this.beforeReadFetch,
       this.handleReadFetch,
+      this.afterReadFetch,
+      this.beforeReadSend,
       this.handleReadSend,
-      this.handleReadFinish
+      this.afterReadSend,
+      this.beforeReadFinish,
+      this.handleReadFinish,
+      this.afterReadFinish
     ]);
+  }
+
+  /**
+   * Do something before starting a resource create request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeCreateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -324,7 +528,27 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleCreateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleStart(ctx);
+    return this.handleStart(ctx, next);
+  }
+
+  /**
+   * Do something after starting a resource create request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterCreateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before writing a resource create request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeCreateWrite(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -335,6 +559,28 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleCreateWrite(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     ctx.resource.data = await ctx.resource.query.create(ctx.request.body as T);
+
+    return next();
+  }
+
+  /**
+   * Do something after writing a resource create request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterCreateWrite(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before sending a resource create request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeCreateSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -344,7 +590,27 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleCreateSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleSend(ctx);
+    return this.handleSend(ctx, next);
+  }
+
+  /**
+   * Do something after sending a resource create request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterCreateSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before finishing a resource create request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeCreateFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -354,7 +620,17 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleCreateFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleFinish(ctx);
+    return this.handleFinish(ctx, next);
+  }
+
+  /**
+   * Do something after finishing a resource create request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterCreateFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -365,11 +641,29 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleCreate(ctx: ResourceContext<T>): Promise<any> {
     return this.process(ctx, [
+      this.beforeCreateStart,
       this.handleCreateStart,
+      this.afterCreateStart,
+      this.beforeCreateWrite,
       this.handleCreateWrite,
+      this.afterCreateWrite,
+      this.beforeCreateSend,
       this.handleCreateSend,
-      this.handleCreateFinish
+      this.afterCreateSend,
+      this.beforeCreateFinish,
+      this.handleCreateFinish,
+      this.afterCreateFinish
     ]);
+  }
+
+  /**
+   * Do something before starting a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeUpdateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -379,7 +673,27 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleUpdateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleStart(ctx, true);
+    return this.handleStart(ctx, next);
+  }
+
+  /**
+   * Do something after starting a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterUpdateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before fetching a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeUpdateFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -390,6 +704,28 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleUpdateFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     ctx.resource.data = await ctx.resource.query.findOne();
+
+    return next();
+  }
+
+  /**
+   * Do something after fetching a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterUpdateFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before writing a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeUpdateWrite(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -403,6 +739,28 @@ export class Resource<T extends Model> extends Router {
 
     // We reload. Kind of suboptimal but our only solution right now.
     ctx.resource.data = await ctx.resource.query.findOne();
+
+    return next();
+  }
+
+  /**
+   * Do something after writing a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterUpdateWrite(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before sending a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeUpdateSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -412,7 +770,27 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleUpdateSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleSend(ctx);
+    return this.handleSend(ctx, next);
+  }
+
+  /**
+   * Do something after sending a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterUpdateSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before finishing a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeUpdateFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -422,7 +800,17 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleUpdateFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleFinish(ctx);
+    return this.handleFinish(ctx, next);
+  }
+
+  /**
+   * Do something after finishing a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterUpdateFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -433,12 +821,32 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleUpdate(ctx: ResourceContext<T>): Promise<any> {
     return this.process(ctx, [
+      this.beforeUpdateStart,
       this.handleUpdateStart,
+      this.afterUpdateStart,
+      this.beforeUpdateFetch,
       this.handleUpdateFetch,
+      this.afterUpdateFetch,
+      this.beforeUpdateWrite,
       this.handleUpdateWrite,
+      this.afterUpdateWrite,
+      this.beforeUpdateSend,
       this.handleUpdateSend,
-      this.handleUpdateFinish
+      this.afterUpdateSend,
+      this.beforeUpdateFinish,
+      this.handleUpdateFinish,
+      this.afterUpdateFinish
     ]);
+  }
+
+  /**
+   * Do something before starting a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeDeleteStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -448,7 +856,27 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleDeleteStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleStart(ctx, true);
+    return this.handleStart(ctx, next);
+  }
+
+  /**
+   * Do something after starting a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterDeleteStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before fetching a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeDeleteFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -459,6 +887,28 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleDeleteFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     ctx.resource.data = await ctx.resource.query.findOne();
+
+    return next();
+  }
+
+  /**
+   * Do something after fetching a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterDeleteFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before writing a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeDeleteWrite(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -478,6 +928,28 @@ export class Resource<T extends Model> extends Router {
 
     // Get rid of the resource data to indicate it was destroyed.
     ctx.resource.data = null;
+
+    return next();
+  }
+
+  /**
+   * Do something after writing a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterDeleteWrite(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before sending a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeDeleteSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -492,13 +964,43 @@ export class Resource<T extends Model> extends Router {
   }
 
   /**
+   * Do something after sending a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterDeleteSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before finishing a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeDeleteFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
    * Handle finishing a resource delete request.
    *
    * @param ctx The resource context.
    * @returns A promise handling the request.
    */
   protected async handleDeleteFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleFinish(ctx);
+    return this.handleFinish(ctx, next);
+  }
+
+  /**
+   * Do something after finishing a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterDeleteFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -509,11 +1011,21 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleDelete(ctx: ResourceContext<T>): Promise<any> {
     return this.process(ctx, [
+      this.beforeDeleteStart,
       this.handleDeleteStart,
+      this.afterDeleteStart,
+      this.beforeDeleteFetch,
       this.handleDeleteFetch,
+      this.afterDeleteFetch,
+      this.beforeDeleteWrite,
       this.handleDeleteWrite,
+      this.afterDeleteWrite,
+      this.beforeDeleteSend,
       this.handleDeleteSend,
-      this.handleDeleteFinish
+      this.afterDeleteSend,
+      this.beforeDeleteFinish,
+      this.handleDeleteFinish,
+      this.afterDeleteFinish
     ]);
   }
 }
