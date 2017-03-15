@@ -35,6 +35,10 @@
     "clean": "rm -rf dist"
   },
   "author": "Creative Curiosity",
+  "peerDependencies": {
+    "squell": "^0.3.1",
+    "modelsafe": "^0.3.0"
+  },
   "devDependencies": {
     "@types/mocha": "^2.2.33",
     "@types/should": "^8.1.30",
@@ -44,8 +48,10 @@
     "sqlite": "^2.2.4",
     "ts-node": "^1.7.2",
     "tslint": "^4.0.2",
-    "tslint-config-ccs": "^0.3.4",
-    "typedoc": "^0.5.5"
+    "tslint-config-ccs": "^0.3.5",
+    "typedoc": "^0.5.5",
+    "squell": "^0.3.1",
+    "modelsafe": "^0.3.0"
   },
   "dependencies": {
     "@types/jwt-simple": "^0.5.32",
@@ -59,7 +65,6 @@
     "koa-router": "^7.0.1",
     "lodash": "^4.17.2",
     "moment": "^2.17.0",
-    "squell": "^0.2.4",
     "typescript": "^2.1.4"
   }
 }

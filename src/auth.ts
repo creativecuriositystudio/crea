@@ -10,7 +10,6 @@ import moment from 'moment';
 import * as squell from 'squell';
 import * as _ from 'lodash';
 
-import { ApplicationError } from './app';
 import { RouterContext, Middleware } from './router';
 
 /** Raised when a user is not found during authentication. */
@@ -99,7 +98,7 @@ export abstract class Auth<T> {
    */
   private secret: string;
 
-  /*
+  /**
    * The number of days that generated authentication tokens will
    * last for. This should be a high number and defaults
    * to two weeks.
@@ -115,7 +114,7 @@ export abstract class Auth<T> {
    * @param secret     The secret key.
    * @param expiryDays The number of days auth tokens will be valid for.
    */
-  constructor(secret: string, expiryDays = 14) {
+  constructor(secret: string, expiryDays: number = 14) {
     this.secret = secret;
     this.expiryDays = expiryDays;
   }
@@ -250,8 +249,8 @@ export abstract class Auth<T> {
    *
    * By default:
    *
-   * * UserNotFoundErrors, TokenInvalidErrors and TokenExpiryErrors are converted to 401 code responses.
-   * * ValidationErrors are converted to 400 code responses with the path errors.
+   * * `UserNotFoundError`, `TokenInvalidError` and `TokenExpiryError` are converted to 401 code responses.
+   * * `modelsafe.ValidationError` are converted to 400 code responses with the path errors.
    * * Anything else is converted to a 500 code.
    *
    * @param err The error raised during an auth route.
@@ -260,27 +259,7 @@ export abstract class Auth<T> {
    * @returns A promise handling the error response.
    */
   protected async handleError(err: Error, ctx: RouterContext, next: () => Promise<any>): Promise<any> {
-    if (err instanceof squell.ValidationError) {
-      let resErr = ResourceError.coerce(err);
-
-      ctx.status = 400;
-      ctx.body = {
-        message: resErr.message,
-        errors: resErr.errors || []
-      };
-    } else {
-      ctx.status =
-        err instanceof UserNotFoundError ||
-        err instanceof TokenInvalidError ||
-        err instanceof TokenExpiryError
-
-        ? 401
-        : 500;
-
-      ctx.body = {
-        message: err.message
-      };
-    }
+    return (ctx.error.bind(ctx))(err);
   }
 
   /**

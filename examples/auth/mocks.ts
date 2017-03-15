@@ -8,6 +8,5 @@ export default function(db: Database) {
   user.username = 'admin';
   user.password = 'abc123';
 
-  return db.query(User)
-    .create(user);
+  return db.query(User).create(user);
 }
