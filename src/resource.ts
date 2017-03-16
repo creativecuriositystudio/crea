@@ -78,10 +78,10 @@ export interface ResourceOptions {
 
 /**
  * A REST resource implementation of a router.
- * This has a default implementation for a Squell model
- * and can be indirectly customised using options or
- * middleware hooks. These hooks can be run with a defined priority
- * to support overriding default functionality.
+ * This has a default implementation of a REST resource.
+ * Each action and milestone are broken up into
+ * their own methods, allowing extending this class
+ * with changes to the default functionality.
  *
  * This can be used on a router
  * at a specific path to mount the resource, e.g.:

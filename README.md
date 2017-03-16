@@ -17,6 +17,14 @@ have the following Koa middleware enabled:
 * [koa-bodyparser 3.x](https://github.com/koajs/bodyparser)
 * [koa-router 7.x](https://github.com/koajs/bodyparser)
 
+## Features
+
+* All Koa middleware works out of the box with Restla applications.
+* `Resource`, a router that can generate generic REST resource routes from a Squell model.
+  The default functionality can easily be change by extending the `Resource` class.
+* `Auth`, an authentication helper that is backend agnostic (i.e. you could authenticate
+  with a third-party authentication.
+
 ## Installation
 
 ```
