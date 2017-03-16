@@ -1,5 +1,5 @@
 /**
- * Provides the REST resource-specific routing functionality of a Crea application.
+ * Provides the REST resource-specific routing functionality of an application.
  */
 import * as squell from 'squell';
 import * as _ from 'lodash';
@@ -62,7 +62,7 @@ export interface ResourceData<T extends Model> {
 }
 
 /**
- * A REST resource-specific implementation of Crea's router context.
+ * A REST resource-specific implementation of a router context.
  * This will be given to any middleware for a resource.
  */
 export interface ResourceContext<T extends Model> extends RouterContext {

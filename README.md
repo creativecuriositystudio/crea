@@ -34,7 +34,7 @@ npm install --save restla
 ## Documentation
 
 The API documentation generated using [TypeDoc](https://github.com/TypeStrong/typedoc)
-is [available online](http://creativecuriosity.github.io/crea).
+is [available online](http://creativecuriosity.github.io/restla).
 
 To generate API documentation from the code into the `docs` directory, run:
 
