@@ -3,7 +3,8 @@
  */
 import * as squell from 'squell';
 import * as _ from 'lodash';
-import { Model, ModelConstructor } from 'modelsafe';
+import { Model, ModelConstructor, isLazyLoad,
+         getProperties, getAssociations } from 'modelsafe';
 
 import { ApplicationError } from './app';
 import { Router, RouterContext, Middleware } from './router';
@@ -57,8 +58,16 @@ export interface ResourceData<T extends Model> {
    */
   query: squell.Query<T>;
 
-  /** The data for the resource context (if it's been fetched). */
-  data?: Partial<T> | Partial<T>[];
+  /**
+   * The data for the request. This is initially
+   * populated from the body during the start milestone and then
+   * merged onto the actual model instance during
+   * the write step.
+   */
+  data: Partial<T> | Partial<T>[];
+
+  /** The model instance data for the resource context (if it's been fetched). */
+  instance?: T | T[];
 }
 
 /**
@@ -73,7 +82,10 @@ export interface ResourceContext<T extends Model> extends RouterContext {
 /** Options to customize the behaviour of a REST resource. */
 export interface ResourceOptions {
   /** Which REST resource actions should be enabled. */
-  actions: ResourceAction[];
+  actions?: ResourceAction[];
+
+  /** Whether to include all associations on the resource. Defaults to false. */
+  associations?: boolean;
 }
 
 /**
@@ -115,6 +127,7 @@ export class Resource<T extends Model> extends Router {
     this.db = db;
     this.model = model;
     this.resourceOptions = {
+      associations: false,
       actions: [
         ResourceAction.LIST,
         ResourceAction.READ,
@@ -174,18 +187,39 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleStart(ctx: ResourceContext<T>, next: () => Promise<any>, multiple: boolean = false): Promise<any> {
+    let model = this.model;
     let db = this.db;
-
-    ctx.resource = {
-      model: this.model,
-      query: this.db.query(this.model)
+    let resource = {
+      model,
+      query: db.query(model),
+      data: _.clone(ctx.request.body) as Partial<T> | Partial<T>[]
     };
 
     if (!multiple) {
       // Kinda hacky, but we have to do this to make sure
       // we're fetching by whatever primary key they've defined.
-      ctx.resource.query = ctx.resource.query.where(_ => db.getInternalModelPrimary(this.model).eq(ctx.params.id));
+      resource.query = resource.query.where(_ => db.getInternalModelPrimary(this.model).eq(ctx.params.id));
+
+      // Iterate through all of the associations add them as includes.
+      // FIXME: Figure out a prettier way to do this. Perhaps even add it to Squell.
+      if (this.resourceOptions.associations) {
+        let assocs = getAssociations(model);
+
+        for (let key of Object.keys(assocs)) {
+          let options = assocs[key];
+          let target = options.target;
+
+          // Lazily load the target if required.
+          if (isLazyLoad(target)) {
+            target = (<() => ModelConstructor<any>> target)();
+          }
+
+          resource.query = resource.query.include(<ModelConstructor<any>> target, m => new squell.AssocAttribute(key));
+        }
+      }
     }
+
+    ctx.resource = resource;
 
     return next();
   }
@@ -198,14 +232,14 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleSend(ctx: ResourceContext<T>, next: () => Promise<any>, multiple: boolean = false): Promise<any> {
-    if (!ctx.resource.data) {
+    if (!ctx.resource.instance) {
       throw new ApplicationError(404, 'Not Found');
     }
 
     if (multiple) {
-      ctx.multiple(<Partial<T>[]> ctx.resource.data);
+      ctx.multiple(<Partial<T>[]> ctx.resource.instance);
     } else {
-      ctx.single(<Partial<T>> ctx.resource.data);
+      ctx.single(<Partial<T>> ctx.resource.instance);
     }
 
     return next();
@@ -268,7 +302,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleListFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    ctx.resource.data = await ctx.resource.query.find();
+    ctx.resource.instance = await ctx.resource.query.find();
 
     return next();
   }
@@ -413,7 +447,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleReadFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    ctx.resource.data = await ctx.resource.query.findOne();
+    ctx.resource.instance = await ctx.resource.query.findOne();
 
     return next();
   }
@@ -558,7 +592,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleCreateWrite(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    ctx.resource.data = await ctx.resource.query.create(ctx.request.body as T);
+    ctx.resource.instance = await ctx.resource.query.create(ctx.resource.data as T);
 
     return next();
   }
@@ -703,7 +737,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleUpdateFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    ctx.resource.data = await ctx.resource.query.findOne();
+    ctx.resource.instance = await ctx.resource.query.findOne();
 
     return next();
   }
@@ -735,10 +769,10 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleUpdateWrite(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    await ctx.resource.query.update(ctx.request.body as Partial<T>);
+    await ctx.resource.query.update(ctx.resource.data as Partial<T>);
 
     // We reload. Kind of suboptimal but our only solution right now.
-    ctx.resource.data = await ctx.resource.query.findOne();
+    ctx.resource.instance = await ctx.resource.query.findOne();
 
     return next();
   }
@@ -920,14 +954,14 @@ export class Resource<T extends Model> extends Router {
   protected async handleDeleteWrite(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     // Throw a 404 if we haven't fetched anything.
     // We can't successfully delete without finding something first.
-    if (!ctx.resource.data) {
+    if (!ctx.resource.instance) {
       throw new ApplicationError(404, 'Not Found');
     }
 
     await ctx.resource.query.destroy();
 
     // Get rid of the resource data to indicate it was destroyed.
-    ctx.resource.data = null;
+    ctx.resource.instance = null;
 
     return next();
   }

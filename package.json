@@ -1,6 +1,6 @@
 {
   "name": "restla",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "dist/index.js",
   "bugs": "https://github.com/creativecuriositystudio/restla/issues",
   "keywords": [
@@ -36,18 +36,18 @@
   },
   "author": "Creative Curiosity",
   "peerDependencies": {
-    "squell": "^0.3.1",
-    "modelsafe": "^0.3.0"
+    "squell": ">= 0.5.1",
+    "modelsafe": ">= 0.5.2"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.33",
     "@types/should": "^8.1.30",
     "husky": "^0.13.2",
     "mocha": "^3.2.0",
-    "modelsafe": "^0.3.0",
+    "squell": ">= 0.5.1",
+    "modelsafe": ">= 0.5.2",
     "should": "^11.1.2",
     "sqlite": "^2.2.4",
-    "squell": "^0.3.1",
     "ts-node": "^1.7.2",
     "tslint": "^4.5.1",
     "tslint-config-ccs": "^0.3.6",

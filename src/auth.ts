@@ -19,6 +19,10 @@ export class UserNotFoundError extends Error {
 
     this.name = 'UserNotFoundError';
     this.stack = new Error().stack;
+
+    // Required in order for error instances to be able to use instanceof.
+    // SEE: https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md
+    Object.setPrototypeOf(this, UserNotFoundError.prototype);
   }
 }
 
@@ -29,6 +33,10 @@ export class TokenExpiryError extends Error {
 
     this.name = 'TokenExpiryError';
     this.stack = new Error().stack;
+
+    // Required in order for error instances to be able to use instanceof.
+    // SEE: https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md
+    Object.setPrototypeOf(this, TokenExpiryError.prototype);
   }
 }
 
@@ -39,6 +47,10 @@ export class TokenInvalidError extends Error {
 
     this.name = 'TokenInvalidError';
     this.stack = new Error().stack;
+
+    // Required in order for error instances to be able to use instanceof.
+    // SEE: https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md
+    Object.setPrototypeOf(this, TokenInvalidError.prototype);
   }
 }
 

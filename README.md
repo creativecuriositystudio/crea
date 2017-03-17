@@ -31,6 +31,47 @@ have the following Koa middleware enabled:
 npm install --save restla
 ```
 
+## Usage
+
+### Error Handling
+
+By default Restla catches all error during requests, coerces them
+into `ApplicationError`s if they're not already an application error
+and then sends them to the client with a response similar to:
+
+```json
+{
+  "message": "Some error message",
+  "errors": []
+}
+```
+
+Restla automatically coerces ModelSafe validation errors into a 400 response
+and any authentication errors into 402 responses. Any other unknown errors
+are then turned into 500 errors. The validation error response (400 bad request)
+looks similar to the above but is populated with error messages for each field:
+
+```json
+{
+  "message": "Validation failed",
+  "errors": [{
+    "path": "name",
+    "message": "Is required"
+  }]
+}
+```
+
+If you hit any errors you should reject (or throw if you're using the async keyword) with an an `ApplicationError`
+in your route or resource. It takes a status code and error message like so:
+
+```typescript
+throw new ApplicationError(404, 'Not Found');
+```
+
+Restla will automatically catch any rejected errors and send them using the `ApplicationContext`'s error method.
+You can provide your own error response handling method by passing in a custom `ApplicationContext` when instantiating
+a Restla application.
+
 ## Documentation
 
 The API documentation generated using [TypeDoc](https://github.com/TypeStrong/typedoc)

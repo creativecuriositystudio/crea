@@ -14,4 +14,4 @@ import { db } from '../db';
  * * GET /presidents/:id
  * * DELETE /presidents/:id
  */
-export const presidentsResource = new Resource(db, President);
+export const presidentsResource = new Resource(db, President, { associations: true });

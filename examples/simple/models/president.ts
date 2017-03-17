@@ -18,7 +18,7 @@ export class President extends modelsafe.Model {
   @squell.attr({ allowNull: false })
   public lastName: string;
 
-  @modelsafe.attr(modelsafe.STRING)
+  @modelsafe.attr(modelsafe.BOOLEAN)
   @squell.attr({ defaultValue: false })
   public active: boolean;
 

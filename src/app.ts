@@ -35,10 +35,14 @@ export class ApplicationError extends Error {
   constructor(status: number, message: string, errors?: ApplicationFieldError[]) {
     super(message);
 
-    this.name = 'ResourceError';
+    this.name = 'ApplicationError';
     this.stack = new Error().stack;
     this.status = status;
     this.errors = errors;
+
+    // Required in order for error instances to be able to use instanceof.
+    // SEE: https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md
+    Object.setPrototypeOf(this, ApplicationError.prototype);
   }
 }
 
@@ -197,7 +201,7 @@ export class Application extends KoaApplication {
       }
 
       try {
-        return next();
+        return await next();
       } catch (err) {
         // Coerce the error.
         return ctx.error(err);

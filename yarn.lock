@@ -49,13 +49,13 @@
     "@types/cookies" "*"
     "@types/node" "*"
 
-"@types/lodash@*", "@types/lodash@^4.14.37", "@types/lodash@^4.14.53":
-  version "4.14.55"
-  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.55.tgz#75d7d4eba020ee4103d4cbd0f2a3ef5db8f7534f"
-
-"@types/lodash@^4.14.41":
+"@types/lodash@*", "@types/lodash@^4.14.37", "@types/lodash@^4.14.41":
   version "4.14.43"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.43.tgz#0373de422e70f5bce12c15340103a3c126c81086"
+
+"@types/lodash@^4.14.53":
+  version "4.14.55"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.55.tgz#75d7d4eba020ee4103d4cbd0f2a3ef5db8f7534f"
 
 "@types/marked@0.0.28":
   version "0.0.28"
@@ -1195,9 +1195,9 @@ mocha@^3.2.0:
     mkdirp "0.5.1"
     supports-color "3.1.2"
 
-modelsafe@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/modelsafe/-/modelsafe-0.3.0.tgz#005691baf1d2dfa153b1845c7115ff27677f5e9f"
+"modelsafe@>= 0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/modelsafe/-/modelsafe-0.5.2.tgz#7192368eee1f7a0f04a65b2eccffce423ee4b983"
   dependencies:
     "@types/lodash" "^4.14.53"
     "@types/reflect-metadata" "0.0.5"
@@ -1637,9 +1637,9 @@ sqlite@^2.2.4:
   dependencies:
     sqlite3 "^3.1.8"
 
-squell@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/squell/-/squell-0.3.1.tgz#3053d316f5add524759ee65e06e5d6ca236f92c3"
+"squell@>= 0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/squell/-/squell-0.5.1.tgz#f1fe351559fe8fcbddd272d392ccb4c06401741a"
   dependencies:
     "@types/lodash" "^4.14.41"
     "@types/reflect-metadata" "0.0.5"
