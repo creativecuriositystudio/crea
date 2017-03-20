@@ -1,3 +1,7 @@
+# 0.2.1
+
+* Broke out error coercion into `ApplicationError.coerce`
+
 # 0.2.0
 
 * Correct error handling, and have all error types correctly support the instanceof operator

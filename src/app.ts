@@ -44,6 +44,43 @@ export class ApplicationError extends Error {
     // SEE: https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md
     Object.setPrototypeOf(this, ApplicationError.prototype);
   }
+
+  /**
+   * Coerce any error into an application error.
+   *
+   * @param err The error.
+   * @returns The coerced error.
+   */
+  static coerce(err: Error): ApplicationError {
+    let coerced: ApplicationError = <ApplicationError> err;
+
+    // Coerce error into an ApplicationError with a relevant status code.
+    if (!(err instanceof ApplicationError)) {
+      if (err instanceof ValidationError) {
+        let errors = <ValidationError<any>> err.errors;
+        let coercedErrors: ApplicationFieldError[] = [];
+
+        for (let key of Object.keys(errors)) {
+          coercedErrors = coercedErrors.concat(errors[key].map((message: string) => {
+            return {
+              path: key,
+              message
+            };
+          }));
+        }
+
+        coerced = new ApplicationError(400, err.message, coercedErrors);
+      } else if (err instanceof UserNotFoundError ||
+                 err instanceof TokenInvalidError ||
+                 err instanceof TokenExpiryError) {
+        coerced = new ApplicationError(401, err.message);
+      } else {
+        coerced = new ApplicationError(500, err.message);
+      }
+    }
+
+    return coerced;
+  }
 }
 
 /**
@@ -137,33 +174,8 @@ export class Application extends KoaApplication {
 
     this.ctx = {
       /** Handles sending an error. */
-      async error(this: RouterContext, err: Error | ApplicationError): Promise<any> {
-        let coerced: ApplicationError = <ApplicationError> err;
-
-        // Coerce error into an ApplicationError with a relevant status code.
-        if (!(err instanceof ApplicationError)) {
-          if (err instanceof ValidationError) {
-            let errors = <ValidationError<any>> err.errors;
-            let coercedErrors: ApplicationFieldError[] = [];
-
-            for (let key of Object.keys(errors)) {
-              coercedErrors = coercedErrors.concat(errors[key].map((message: string) => {
-                return {
-                  path: key,
-                  message
-                };
-              }));
-            }
-
-            coerced = new ApplicationError(400, err.message, coercedErrors);
-          } else if (err instanceof UserNotFoundError ||
-                     err instanceof TokenInvalidError ||
-                     err instanceof TokenExpiryError) {
-            coerced = new ApplicationError(401, err.message);
-          } else {
-            coerced = new ApplicationError(500, err.message);
-          }
-        }
+      async error(this: RouterContext, err: Error): Promise<any> {
+        let coerced = ApplicationError.coerce(err);
 
         this.status = coerced.status;
         this.body = {
