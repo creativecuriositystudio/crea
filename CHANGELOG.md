@@ -1,3 +1,7 @@
+# 0.2.2
+
+* Bump Squell required to 0.5.2 for association saving fix
+
 # 0.2.1
 
 * Broke out error coercion into `ApplicationError.coerce`
