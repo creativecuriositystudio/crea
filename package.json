@@ -24,7 +24,7 @@
   },
   "types": "./dist/index.d.ts",
   "scripts": {
-    "prepush": "npm run lint && npm run test",
+    "prepush": "npm run lint",
     "prepublish": "tsc",
     "build": "tsc",
     "build:auto": "tsc --watch",
