@@ -59,6 +59,13 @@ export interface ResourceData<T extends Model> {
   query: squell.Query<T>;
 
   /**
+   * Whether this resource is acting on a single instance
+   * or multiple instances. The only resource action
+   * that acts on multiple currently is listing.
+   */
+  multiple: boolean;
+
+  /**
    * The data for the request. This is initially
    * populated from the body during the start milestone and then
    * merged onto the actual model instance during
@@ -151,51 +158,82 @@ export class Resource<T extends Model> extends Router {
   }
 
   /**
-   * Process a list of resource middlewares in the order given.
-   * This will run them through a promise chain and continue
-   * until the `next` function is not called.
+   * Process a single resource middleware or a chain of resource middlewares in the order given.
+   * This normally will be called with the default chain of middlewares to run through for a specific
+   * REST action, but you should use it if you intend to process any sub-chain of middlewares
+   * in your own resource methods.
    *
+   * Using this function ensures that every middlware (or the single middleware) will receive
+   * a `next` function.
+   *
+   * This function takes a `parentNext` function which should be the `next` function given to the
+   * the callee of this function (i.e. the middleware of the parent chain). The `next` function
+   * then passes to the sub-chain of this process will automatically call the callee's provided
+   * `parentNext` function if the last middleware returns/calls `next`. This ensures
+   * that when you process a chain of middlewares, the `next` behaviour will carry across
+   * from the chain to the parent function.
+   *
+   * This uses the same logic as Koa's middleware composing.
+   *
+   * @see https://github.com/koajs/compose/blob/master/index.js
    * @param ctx The resource context.
-   * @param mws The resurce middlewares to process.
+   * @param chain The resurce middleware[s] to process.
+   * @param parentNext The next function of the middleware, if available.
+   * @returns A promise processing the resource middleware[s].
    */
-  private async process(ctx: ResourceContext<T>, mws: ResourceMiddleware<T>[]) {
-    let this_ = this;
+  private async process(ctx: ResourceContext<T>, chain: ResourceMiddleware<T> | ResourceMiddleware<T>[],
+                        parentNext?: () => Promise<any>): Promise<any> {
+    let mws = <ResourceMiddleware<T>[]> chain;
 
-    return mws.reduce(async (promise, mw) => {
-      let result = await promise;
+    if (!Array.isArray(chain)) {
+      mws = [<ResourceMiddleware<T>> chain];
+    }
 
-      // If the last promise returned false, then that means
-      // it didn't call next and the request should be halted.
-      if (!result) {
-        return false;
+    if (typeof (parentNext) !== 'function') {
+      parentNext = async () => undefined;
+    }
+
+    // The last called middleware number.
+    let index = -1;
+    let dispatch = async (i: number) => {
+      let mw = mws[i];
+
+      if (i <= index) {
+        throw new Error('next() called multiple times in resource middleware');
       }
 
-      let cont = false;
-      let next = async () => cont = true;
+      index = i;
 
-      await mw.bind(this_)(ctx, next);
+      if (i === mws.length) return parentNext();
+      if (!mw) return;
 
-      return cont;
-    }, Promise.resolve(true));
+      return (mw.bind(this))(ctx, async () => {
+        return dispatch(i + 1);
+      });
+    };
+
+    return dispatch(0);
   }
 
   /**
    * Handle starting a resource request.
    *
    * @param ctx The resource context.
-   * @param multiple Whether this is a fetch on multiple instances.
    * @returns A promise handling the request.
    */
-  protected async handleStart(ctx: ResourceContext<T>, next: () => Promise<any>, multiple: boolean = false): Promise<any> {
+  protected async handleStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     let model = this.model;
     let db = this.db;
     let resource = {
+      multiple: false,
       model,
       query: db.query(model),
-      data: _.clone(ctx.request.body) as Partial<T> | Partial<T>[]
+      data: _.clone(ctx.request.body) as Partial<T> | Partial<T>[],
+
+      ... ctx.resource,
     };
 
-    if (!multiple) {
+    if (!resource.multiple) {
       // Kinda hacky, but we have to do this to make sure
       // we're fetching by whatever primary key they've defined.
       resource.query = resource.query.where(_ => db.getInternalModelPrimary(this.model).eq(ctx.params.id));
@@ -228,18 +266,17 @@ export class Resource<T extends Model> extends Router {
    * Handle sending a resource request.
    *
    * @param ctx The resource context.
-   * @param multiple Whether this is a fetch on multiple instances.
    * @returns A promise handling the request.
    */
-  protected async handleSend(ctx: ResourceContext<T>, next: () => Promise<any>, multiple: boolean = false): Promise<any> {
+  protected async handleSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     if (!ctx.resource.instance) {
       throw new ApplicationError(404, 'Not Found');
     }
 
-    if (multiple) {
-      ctx.multiple(<Partial<T>[]> ctx.resource.instance);
+    if (ctx.resource.multiple) {
+      ctx.responder.multiple(ctx, <Partial<T>[]> ctx.resource.instance);
     } else {
-      ctx.single(<Partial<T>> ctx.resource.instance);
+      ctx.responder.single(ctx, <Partial<T>> ctx.resource.instance);
     }
 
     return next();
@@ -272,7 +309,11 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleListStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleStart(ctx, next, true);
+    ctx.resource = {
+      multiple: true
+    } as ResourceData<T>;
+
+    return this.process(ctx, this.handleStart, next);
   }
 
   /**
@@ -334,7 +375,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleListSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleSend(ctx, next, true);
+    return this.process(ctx, this.handleSend, next);
   }
 
   /**
@@ -364,7 +405,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleListFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleFinish(ctx, next);
+    return this.process(ctx, this.handleFinish, next);
   }
 
   /**
@@ -417,7 +458,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleReadStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleStart(ctx, next);
+    return this.process(ctx, this.handleStart, next);
   }
 
   /**
@@ -479,7 +520,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleReadSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleSend(ctx, next);
+    return this.process(ctx, this.handleSend, next);
   }
 
   /**
@@ -562,7 +603,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleCreateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleStart(ctx, next);
+    return this.process(ctx, this.handleStart, next);
   }
 
   /**
@@ -624,7 +665,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleCreateSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleSend(ctx, next);
+    return this.process(ctx, this.handleSend, next);
   }
 
   /**
@@ -654,7 +695,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleCreateFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleFinish(ctx, next);
+    return this.process(ctx, this.handleFinish, next);
   }
 
   /**
@@ -707,7 +748,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleUpdateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleStart(ctx, next);
+    return this.process(ctx, this.handleStart, next);
   }
 
   /**
@@ -804,7 +845,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleUpdateSend(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleSend(ctx, next);
+    return this.process(ctx, this.handleSend, next);
   }
 
   /**
@@ -834,7 +875,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleUpdateFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleFinish(ctx, next);
+    return this.process(ctx, this.handleFinish, next);
   }
 
   /**
@@ -890,7 +931,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleDeleteStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleStart(ctx, next);
+    return this.process(ctx, this.handleStart, next);
   }
 
   /**
@@ -1024,7 +1065,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleDeleteFinish(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    return this.handleFinish(ctx, next);
+    return this.process(ctx, this.handleFinish, next);
   }
 
   /**

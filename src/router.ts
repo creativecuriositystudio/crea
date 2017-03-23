@@ -2,7 +2,8 @@
  * Provides all routing functionality of a Crea application, based off koa-router.
  */
 import * as KoaRouter from 'koa-router';
-import { ApplicationContext } from './app';
+
+import { Responder } from './responder';
 
 /**
  * The router handles routing in a Crea application and
@@ -16,7 +17,7 @@ export class Router extends KoaRouter {}
  * but it is functionally equivalent to both Koa's default contexts
  * and koa-router's contexts.
  */
-export interface RouterContext extends KoaRouter.IRouterContext, ApplicationContext {
+export interface RouterContext extends KoaRouter.IRouterContext {
   /**
    * An optional user authenticated.
    * This will need to be casted to an application-specific user model.
@@ -24,6 +25,9 @@ export interface RouterContext extends KoaRouter.IRouterContext, ApplicationCont
    * @see Auth
    */
   user?: any;
+
+  /** The responder to use for sending REST responses. */
+  responder: Responder;
 }
 
 /**

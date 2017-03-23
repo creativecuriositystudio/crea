@@ -1,6 +1,6 @@
 {
   "name": "restla",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "main": "dist/index.js",
   "bugs": "https://github.com/creativecuriositystudio/restla/issues",
   "keywords": [
@@ -59,13 +59,13 @@
     "@types/koa": "^2.0.34",
     "@types/koa-bodyparser": "^3.0.20",
     "@types/koa-router": "^7.0.21",
-    "@types/lodash": "^4.14.41",
+    "@types/lodash": "^4.14.57",
     "jwt-simple": "^0.5.1",
     "koa": "^2.0.0",
     "koa-bodyparser": "^3.2.0",
     "koa-router": "^7.0.1",
-    "lodash": "^4.17.2",
+    "lodash": "^4.17.4",
     "moment": "^2.17.0",
-    "typescript": "^2.1.4"
+    "typescript": "^2.2.0"
   }
 }

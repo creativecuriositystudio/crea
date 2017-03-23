@@ -255,26 +255,6 @@ export abstract class Auth<T> {
   }
 
   /**
-   * Handles formatting and sending error during a route.
-   * This can be overridden by a child class to change
-   * how errors are handled/formatted.
-   *
-   * By default:
-   *
-   * * `UserNotFoundError`, `TokenInvalidError` and `TokenExpiryError` are converted to 401 code responses.
-   * * `modelsafe.ValidationError` are converted to 400 code responses with the path errors.
-   * * Anything else is converted to a 500 code.
-   *
-   * @param err The error raised during an auth route.
-   * @param ctx The resource context.
-   * @param next The next function for progressing the route tree.
-   * @returns A promise handling the error response.
-   */
-  protected async handleError(err: Error, ctx: RouterContext, next: () => Promise<any>): Promise<any> {
-    return ctx.error(err);
-  }
-
-  /**
    * A middleware used to check if the user is authed,
    * and if so populates the router context with the user
    * object.
@@ -303,18 +283,12 @@ export abstract class Auth<T> {
           return next();
         }
 
-        return this_.handleError(new TokenInvalidError('No token header set'), ctx, next);
+        throw new TokenInvalidError('No token header set');
       }
 
       // The bearer token is always has the prefix of 'bearer <token>',
       // or 'token <token>'. We only care about the actual token portion.
-      token = token.split(/\s/g)[1] || '';
-
-      try {
-        ctx.user = await this.consumeToken(token);
-      } catch (err) {
-        return this_.handleError(err, ctx, next);
-      }
+      ctx.user = await this.consumeToken(token.split(/\s/g)[1] || '');
 
       // Keep going along the chain, with the user available.
       return next();
@@ -333,15 +307,11 @@ export abstract class Auth<T> {
     let self = this;
 
     return async (ctx: RouterContext, next: () => Promise<any>): Promise<any> => {
-      try {
-        let user = await self.loginUser(ctx);
+      let user = await self.loginUser(ctx);
 
-        ctx.body = {
-          token: self.produceToken(user)
-        };
-      } catch (err) {
-        return self.handleError(err, ctx, next);
-      }
+      ctx.body = {
+        token: self.produceToken(user)
+      };
     };
   }
 
@@ -357,15 +327,11 @@ export abstract class Auth<T> {
     let self = this;
 
     return async (ctx: RouterContext, next: () => Promise<any>): Promise<any> => {
-      try {
-        let user = await self.registerUser(ctx);
+      let user = await self.registerUser(ctx);
 
-        ctx.body = {
-          token: self.produceToken(user)
-        };
-      } catch (err) {
-        return self.handleError(err, ctx, next);
-      }
+      ctx.body = {
+        token: self.produceToken(user)
+      };
     };
   }
 }

@@ -6,217 +6,147 @@ import * as bodyParser from 'koa-bodyparser';
 import { Model, ValidationError } from 'modelsafe';
 
 import { UserNotFoundError, TokenInvalidError, TokenExpiryError } from './auth';
+import { Responder } from './responder';
 import { Router, RouterContext } from './router';
-
-/** The error for a specific field on a resource. */
-export interface ApplicationFieldError {
-  /** The path to the field. */
-  path: string;
-
-  /** The error message for the field. */
-  message: string;
-}
 
 /** An error in an application. */
 export class ApplicationError extends Error {
   /** The HTTP status code of the error, to be sent in response. */
   status: number;
 
-  /** The field errors to be sent in response. */
-  errors?: ApplicationFieldError[];
+  /**
+   * Any error data to be sent in response.
+   * It is completely up to the instantiater as to what
+   * to populate here - it
+   */
+  data?: any;
 
   /**
    * Construct an application error.
    *
    * @param status The HTTP status code.
    * @param message The error message.
-   * @param errors The application field errors.
+   * @param data The error data.
    */
-  constructor(status: number, message: string, errors?: ApplicationFieldError[]) {
+  constructor(status: number, message: string, data?: any) {
     super(message);
 
     this.name = 'ApplicationError';
     this.stack = new Error().stack;
     this.status = status;
-    this.errors = errors;
-
-    // Required in order for error instances to be able to use instanceof.
-    // SEE: https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md
-    Object.setPrototypeOf(this, ApplicationError.prototype);
+    this.data = data;
   }
 
   /**
-   * Coerce any error into an application error.
-   *
-   * @param err The error.
-   * @returns The coerced error.
+   * All of the registered handlers for coercing non-`ApplicationErrors` into
+   * their relevant `ApplicationError` form.
    */
-  static coerce(err: Error): ApplicationError {
-    let coerced: ApplicationError = <ApplicationError> err;
+  static handlers: Map<Function, (err: any) => ApplicationError> = new Map();
 
-    // Coerce error into an ApplicationError with a relevant status code.
-    if (!(err instanceof ApplicationError)) {
-      if (err instanceof ValidationError) {
-        let errors = <ValidationError<any>> err.errors;
-        let coercedErrors: ApplicationFieldError[] = [];
-
-        for (let key of Object.keys(errors)) {
-          coercedErrors = coercedErrors.concat(errors[key].map((message: string) => {
-            return {
-              path: key,
-              message
-            };
-          }));
-        }
-
-        coerced = new ApplicationError(400, err.message, coercedErrors);
-      } else if (err instanceof UserNotFoundError ||
-                 err instanceof TokenInvalidError ||
-                 err instanceof TokenExpiryError) {
-        coerced = new ApplicationError(401, err.message);
-      } else {
-        coerced = new ApplicationError(500, err.message);
-      }
+  /**
+   * Coerce any error type into an `ApplicationError`.
+   *
+   * This will lookup the registered coercion handlers based off the error provided.
+   * If no coerce handler has been provided, then th
+   *
+   * By default the following coercion handlers are enabled:
+   *
+   * * modelsafe.ValidationError: 400 Bad Request, with the `data` field populated with the errors for each request field
+   * * restla.TokenExpiryError: 401 Unauthorised
+   * * restla.TokenInvalidError: 401 Unauthorised
+   * * restla.UserNotFoundError: 401 Unauthorised
+   * * restla.AuthorizationError: 403 Forbidden
+   */
+  static coerce(err: Error | ApplicationError): ApplicationError {
+    if (err instanceof ApplicationError) {
+      return <ApplicationError> err;
     }
 
-    return coerced;
+    // Lookup the registered handler by error constructor as the key.
+    let handler = ApplicationError.handlers.get(err.constructor as typeof Error);
+
+    if (typeof (handler) === 'function') {
+      return handler(<Error> err);
+    }
+
+    // No handler found, just coerce to a 500 Internal Server Error.
+    return new ApplicationError(500, err.message);
+  }
+
+  /**
+   * Register a handler for coercing another error type
+   * into an application error.
+   *
+   * This is useful if you ever intend to throw non-`ApplicationError`s
+   * anywhere in your code - Restla will automatically catch those
+   * and then look for a coerce handler for that error. If no handler
+   * has been registered, then it will just coerc into a generic 500 status
+   * `ApplicationError` with the error message carried across.
+   *
+   * @see coerce
+   * @param ctor The error constructor to automatically coerce using the handler.
+   * @param handler The handler that turns the relevant error type into an application error.
+   */
+  static register<T extends Error>(ctor: Function, handler: (err: T) => ApplicationError) {
+    ApplicationError.handlers.set(ctor, handler);
   }
 }
 
-/**
- * The web application context, providing
- * a set of helper functions to a router context.
- * Anything defined on the application context will be merged into
- * each router context, allowing extending application contexts
- * for providing helper functions to route/resource handling.
- *
- * The context of each of these functions is bound to the router
- * context.
- */
-export interface ApplicationContext {
-  /**
-   * Handles responding with an error in an application.
-   * The default implementation will:
-   *
-   * * Coerce `UserNotFoundError`, `TokenExpiryError` and `TokenInvalidError` into 402 errors.
-   * * Coerce `modelsafe.ValidationError` into 400 errors.
-   *
-   * The errors are sent in the following format:
-   *
-   * ```json
-   * {
-   *   "message": "The message of the error",
-   *   "errors": [{
-   *     "path": "name",
-   *     "message": "The name is invalid"
-   *   }]
-   * }
-   * ```
-   *
-   * The `errors` portion will only be filled if there was a bad request.
-   *
-   * @param err The error to send to the client.
-   * @returns A promise that resolves sending the error to the client.
-   */
-  error(this: RouterContext, err: Error | ApplicationError): Promise<any>;
+ApplicationError.register(ValidationError, <T extends Model>(err: ValidationError<T>): ApplicationError => {
+  return new ApplicationError(400, err.message, err.errors);
+});
 
-  /**
-   * Handles sending a single model instance.
-   * The default implementation will send an instance like:
-   *
-   * ```json
-   * {
-   *   "id": 1,
-   *   "name": "Some name"
-   * }
-   * ```
-   *
-   * @param instance The model instance.
-   * @returns A promise that resolves sending the model instance to the client.
-   */
-  single<T extends Model>(this: RouterContext, instance: T): Promise<any>;
+ApplicationError.register(TokenInvalidError, (err: TokenInvalidError): ApplicationError => {
+  return new ApplicationError(401, err.message);
+});
 
-  /**
-   * Handles sending multiple model instances.
-   * The default implementation will send instances like:
-   *
-   * ```json
-   * [{
-   *   "id": 1,
-   *   "name": "Some name"
-   * }, {
-   *   "id": 2,
-   *   "name": "Other name"
-   * }]
-   * ```
-   *
-   * @param instances The model instances.
-   * @returns A promise that resolves sending the model instances to the client.
-   */
-  multiple<T extends Model>(this: RouterContext, instances: T[]): Promise<any>;
+ApplicationError.register(TokenExpiryError, (err: TokenExpiryError): ApplicationError => {
+  return new ApplicationError(401, err.message);
+});
+
+ApplicationError.register(UserNotFoundError, (err: UserNotFoundError): ApplicationError => {
+  return new ApplicationError(401, err.message);
+});
+
+/** Options for running an application. */
+export interface ApplicationOptions {
+  /** The responder to use for sending REST responses to clients. */
+  responder: Responder;
 }
 
 /**
  * The web application.
+ *
  * This is functionally equivalent to a Koa application,
  * except we use some must-have/good-to-have middlewares
- * early on.
+ * early on and provide some extra things, such as smart error handling.
  */
 export class Application extends KoaApplication {
-  /** The context for the application. */
-  protected ctx: ApplicationContext;
+  /** The options for the application. */
+  options: ApplicationOptions;
 
-  /** Construct an application. */
-  constructor(ctx?: Partial<ApplicationContext>) {
+  /**
+   * Construct an application.
+   *
+   * @param options Any options for the application.
+   */
+  constructor(options?: Partial<ApplicationOptions>) {
     super();
 
-    let this_ = this;
+    this.options = {
+      responder: new Responder(),
 
-    this.ctx = {
-      /** Handles sending an error. */
-      async error(this: RouterContext, err: Error): Promise<any> {
-        let coerced = ApplicationError.coerce(err);
-
-        this.status = coerced.status;
-        this.body = {
-          message: coerced.message,
-          errors: Array.isArray(coerced.errors) ? coerced.errors : []
-        };
-      },
-
-      /** Handles sending a single instance. */
-      async single<T extends Model>(this: RouterContext, instance: T): Promise<any> {
-        this.status = 200;
-        this.body = instance;
-      },
-
-      /** Handles sending multiple instances. */
-      async multiple<T extends Model>(this: RouterContext, instances: T[]): Promise<any> {
-        this.status = 200;
-        this.body = instances;
-      },
-
-      ... ctx
+      ... options
     };
 
     this.use(async (ctx: RouterContext, next: () => Promise<any>) => {
-      // We extend the context manually so we can magically bind any functions
-      // to the router context.
-      for (let key of Object.keys(this_.ctx)) {
-        let value = this_.ctx[key];
-
-        if (typeof (value) === 'function') {
-          ctx[key] = value.bind(ctx);
-        } else {
-          ctx[key] = value;
-        }
-      }
+      ctx.responder = this.options.responder;
 
       try {
         return await next();
       } catch (err) {
-        // Coerce the error.
-        return ctx.error(err);
+        // Coerce the error then send the response.
+        return ctx.responder.error(ctx, ApplicationError.coerce(err));
       }
     });
 
