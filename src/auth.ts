@@ -6,7 +6,7 @@
  * @see https://jwt.io/
  */
 import { decode, encode } from 'jwt-simple';
-import moment from 'moment';
+import * as moment from 'moment';
 import * as squell from 'squell';
 import * as _ from 'lodash';
 
@@ -310,7 +310,7 @@ export abstract class Auth<T> {
       let user = await self.loginUser(ctx);
 
       ctx.body = {
-        token: self.produceToken(user)
+        token: await self.produceToken(user)
       };
     };
   }
@@ -330,7 +330,7 @@ export abstract class Auth<T> {
       let user = await self.registerUser(ctx);
 
       ctx.body = {
-        token: self.produceToken(user)
+        token: await self.produceToken(user)
       };
     };
   }

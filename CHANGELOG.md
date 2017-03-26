@@ -1,3 +1,8 @@
+# 0.3.2
+
+* Fix token production not awaiting
+* Fix usage of moment.js import
+
 # 0.3.1
 
 * Fix responder export
