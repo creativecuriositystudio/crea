@@ -1,3 +1,7 @@
+# 0.3.1
+
+* Fix responder export
+
 # 0.3.0
 
 * Remove application context, modifying REST responses is now done through the `Responder` class
