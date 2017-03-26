@@ -1,3 +1,10 @@
+# 0.3.0
+
+* Remove application context, modifying REST responses is now done through the `Responder` class
+* Manual application error coercing has been converted to a handle based system,
+  allowing users of the library to register their own handlers for their own error types
+  that coerce to an application error
+
 # 0.2.2
 
 * Bump Squell required to 0.5.2 for association saving fix
