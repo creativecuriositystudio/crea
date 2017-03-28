@@ -166,7 +166,7 @@ export class Application extends KoaApplication {
     if (options.multipart) {
       // Parse multipart forms using formidable, if multipart mode is on.
       this.use(async (ctx: RouterContext, next: () => Promise<any>) => {
-        if (ctx.request.is('multipart/form-data')) return next();
+        if (!ctx.request.is('multipart/form-data')) return next();
 
         let form = new IncomingForm();
 

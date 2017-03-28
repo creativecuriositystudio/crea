@@ -1,3 +1,7 @@
+# 0.4.1
+
+* Fix multipart incorrectly skipping multiparts
+
 # 0.4.0
 
 * Bump Squell and ModelSafe dependencies for bug fixes
