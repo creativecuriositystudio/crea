@@ -12,6 +12,12 @@
   dependencies:
     "@types/node" "*"
 
+"@types/formidable@^1.0.29":
+  version "1.0.29"
+  resolved "https://registry.yarnpkg.com/@types/formidable/-/formidable-1.0.29.tgz#d7f5f9fe8cbe48bafad2a7ce0b93d6695e1164e2"
+  dependencies:
+    "@types/node" "*"
+
 "@types/fs-extra@0.0.33":
   version "0.0.33"
   resolved "https://registry.yarnpkg.com/@types/fs-extra/-/fs-extra-0.0.33.tgz#a8719c417b080c012d3497b28e228ac09745fdf2"
@@ -49,15 +55,7 @@
     "@types/cookies" "*"
     "@types/node" "*"
 
-"@types/lodash@*", "@types/lodash@^4.14.37", "@types/lodash@^4.14.53":
-  version "4.14.55"
-  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.55.tgz#75d7d4eba020ee4103d4cbd0f2a3ef5db8f7534f"
-
-"@types/lodash@^4.14.41":
-  version "4.14.43"
-  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.43.tgz#0373de422e70f5bce12c15340103a3c126c81086"
-
-"@types/lodash@^4.14.57":
+"@types/lodash@*", "@types/lodash@^4.14.37", "@types/lodash@^4.14.41", "@types/lodash@^4.14.53", "@types/lodash@^4.14.57":
   version "4.14.57"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.57.tgz#f0095fb15ec1004455613f3ad73766583e62f830"
 
@@ -572,6 +570,10 @@ form-data@~2.1.1:
     asynckit "^0.4.0"
     combined-stream "^1.0.5"
     mime-types "^2.1.12"
+
+formidable@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/formidable/-/formidable-1.1.1.tgz#96b8886f7c3c3508b932d6bd70c4d3a88f35f1a9"
 
 fresh@^0.3.0:
   version "0.3.0"
@@ -1118,11 +1120,7 @@ lodash@4.15.0:
   version "4.15.0"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.15.0.tgz#3162391d8f0140aa22cf8f6b3c34d6b7f63d3aa9"
 
-lodash@^4.13.1, lodash@^4.17.2:
-  version "4.17.2"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.2.tgz#34a3055babe04ce42467b607d700072c7ff6bf42"
-
-lodash@^4.17.4:
+lodash@^4.13.1, lodash@^4.17.2, lodash@^4.17.4:
   version "4.17.4"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.4.tgz#78203a4d1c328ae1d86dca6460e369b57f4055ae"
 
@@ -1203,9 +1201,9 @@ mocha@^3.2.0:
     mkdirp "0.5.1"
     supports-color "3.1.2"
 
-"modelsafe@>= 0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/modelsafe/-/modelsafe-0.5.2.tgz#7192368eee1f7a0f04a65b2eccffce423ee4b983"
+"modelsafe@>= 0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/modelsafe/-/modelsafe-0.6.0.tgz#bad869adaf8dfd56cd93471d69ed9a3f332ee274"
   dependencies:
     "@types/lodash" "^4.14.53"
     "@types/reflect-metadata" "0.0.5"
@@ -1645,9 +1643,9 @@ sqlite@^2.2.4:
   dependencies:
     sqlite3 "^3.1.8"
 
-"squell@>= 0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/squell/-/squell-0.5.2.tgz#78fdedddf0d2f27bd1a31abc0422aa81793b8489"
+"squell@>= 0.6.0":
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/squell/-/squell-0.6.1.tgz#d47195d3743d7791ed4ba327753bb876b501ecf0"
   dependencies:
     "@types/lodash" "^4.14.41"
     "@types/reflect-metadata" "0.0.5"

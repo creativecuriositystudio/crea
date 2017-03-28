@@ -274,9 +274,9 @@ export class Resource<T extends Model> extends Router {
     }
 
     if (ctx.resource.multiple) {
-      ctx.responder.multiple(ctx, <Partial<T>[]> ctx.resource.instance);
+      ctx.responder.multiple(<Partial<T>[]> ctx.resource.instance);
     } else {
-      ctx.responder.single(ctx, <Partial<T>> ctx.resource.instance);
+      ctx.responder.single(<Partial<T>> ctx.resource.instance);
     }
 
     return next();

@@ -1,3 +1,9 @@
+# 0.4.0
+
+* Bump Squell and ModelSafe dependencies for bug fixes
+* Add multipart parsing option (using formidable)
+* Change responder class methods to have the router context as `this`
+
 # 0.3.2
 
 * Fix token production not awaiting

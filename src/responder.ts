@@ -10,6 +10,18 @@ import { RouterContext } from './router';
  * and provide it as a responder in the application options.
  */
 export class Responder {
+  /** The router context being used to respond. */
+  protected ctx: RouterContext;
+
+  /**
+   * Constructs a responder for a router context.
+   *
+   * @param ctx The router context to respond to.
+   */
+  constructor(ctx: RouterContext) {
+    this.ctx = ctx;
+  }
+
   /**
    * Handles responding with an error in an application.
    * The default implementation will:
@@ -34,9 +46,9 @@ export class Responder {
    * @param err The error to send to the client.
    * @returns A promise that resolves sending the error to the client.
    */
-  async error(ctx: RouterContext, err: ApplicationError): Promise<any> {
-    ctx.status = err.status;
-    ctx.body = {
+  async error(err: ApplicationError): Promise<any> {
+    this.ctx.status = err.status;
+    this.ctx.body = {
       message: err.message,
       data: err.data
     };
@@ -56,9 +68,9 @@ export class Responder {
    * @param instance The model instance.
    * @returns A promise that resolves sending the model instance to the client.
    */
-  async single<T extends Model>(ctx: RouterContext, instance: T): Promise<any> {
-    ctx.status = 200;
-    ctx.body = instance;
+  async single<T extends Model>(instance: T): Promise<any> {
+    this.ctx.status = 200;
+    this.ctx.body = instance;
   }
 
   /**
@@ -78,8 +90,14 @@ export class Responder {
    * @param instances The model instances.
    * @returns A promise that resolves sending the model instances to the client.
    */
-  async multiple<T extends Model>(ctx: RouterContext, instances: T[]): Promise<any> {
-    ctx.status = 200;
-    ctx.body = instances;
+  async multiple<T extends Model>(instances: T[]): Promise<any> {
+    this.ctx.status = 200;
+    this.ctx.body = instances;
   }
 }
+
+/*
+ * A responder class/constructor to be used to instantiate
+ * the responder for a request.
+ */
+export type ResponderConstructor = typeof Responder & { new (ctx: RouterContext): Responder };

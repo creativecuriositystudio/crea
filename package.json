@@ -1,6 +1,6 @@
 {
   "name": "restla",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "main": "dist/index.js",
   "bugs": "https://github.com/creativecuriositystudio/restla/issues",
   "keywords": [
@@ -36,16 +36,16 @@
   },
   "author": "Creative Curiosity",
   "peerDependencies": {
-    "squell": ">= 0.5.2",
-    "modelsafe": ">= 0.5.2"
+    "squell": ">= 0.6.1",
+    "modelsafe": ">= 0.6.0"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.33",
     "@types/should": "^8.1.30",
     "husky": "^0.13.2",
     "mocha": "^3.2.0",
-    "squell": ">= 0.5.2",
-    "modelsafe": ">= 0.5.2",
+    "squell": ">= 0.6.0",
+    "modelsafe": ">= 0.6.0",
     "should": "^11.1.2",
     "sqlite": "^2.2.4",
     "ts-node": "^1.7.2",
@@ -55,11 +55,13 @@
     "sequelize": "^4.0.0-2"
   },
   "dependencies": {
+    "@types/formidable": "^1.0.29",
     "@types/jwt-simple": "^0.5.32",
     "@types/koa": "^2.0.34",
     "@types/koa-bodyparser": "^3.0.20",
     "@types/koa-router": "^7.0.21",
     "@types/lodash": "^4.14.57",
+    "formidable": "^1.1.1",
     "jwt-simple": "^0.5.1",
     "koa": "^2.0.0",
     "koa-bodyparser": "^3.2.0",

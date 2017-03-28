@@ -3,10 +3,12 @@
  */
 import * as KoaApplication from 'koa';
 import * as bodyParser from 'koa-bodyparser';
+import * as _ from 'lodash';
+import { Fields, Files, IncomingForm } from 'formidable';
 import { Model, ValidationError } from 'modelsafe';
 
 import { UserNotFoundError, TokenInvalidError, TokenExpiryError } from './auth';
-import { Responder } from './responder';
+import { Responder, ResponderConstructor } from './responder';
 import { Router, RouterContext } from './router';
 
 /** An error in an application. */
@@ -110,8 +112,17 @@ ApplicationError.register(UserNotFoundError, (err: UserNotFoundError): Applicati
 
 /** Options for running an application. */
 export interface ApplicationOptions {
-  /** The responder to use for sending REST responses to clients. */
-  responder: Responder;
+  /** The responder class to use for sending REST responses to clients. */
+  responder: ResponderConstructor;
+
+  /**
+   * Whether multipart requests should be parsed. Off by default to prevent overhead
+   * in apps that don't need file uploads or other multipart requests.
+   *
+   * If a set of formidable options are provided instead of a boolean,
+   * then they will be used as the options for parsing multipart with formidable.
+   */
+  multipart: boolean | Partial<IncomingForm>;
 }
 
 /**
@@ -123,7 +134,7 @@ export interface ApplicationOptions {
  */
 export class Application extends KoaApplication {
   /** The options for the application. */
-  options: ApplicationOptions;
+  protected options: ApplicationOptions;
 
   /**
    * Construct an application.
@@ -133,22 +144,53 @@ export class Application extends KoaApplication {
   constructor(options?: Partial<ApplicationOptions>) {
     super();
 
-    this.options = {
-      responder: new Responder(),
+    this.options = options = {
+      multipart: false,
+      responder: Responder,
 
       ... options
     };
 
+    // Setup default values on the router context, such as the responder.
     this.use(async (ctx: RouterContext, next: () => Promise<any>) => {
-      ctx.responder = this.options.responder;
+      ctx.responder = new options.responder(ctx) as Responder;
 
       try {
         return await next();
       } catch (err) {
         // Coerce the error then send the response.
-        return ctx.responder.error(ctx, ApplicationError.coerce(err));
+        return ctx.responder.error(ApplicationError.coerce(err));
       }
     });
+
+    if (options.multipart) {
+      // Parse multipart forms using formidable, if multipart mode is on.
+      this.use(async (ctx: RouterContext, next: () => Promise<any>) => {
+        if (ctx.request.is('multipart/form-data')) return next();
+
+        let form = new IncomingForm();
+
+        // If a non-boolean was provided, extend the form with the user's options.
+        if (typeof (options.multipart) !== 'boolean') {
+          _.extend(form, <Partial<IncomingForm>> options.multipart);
+        }
+
+        [ctx.request.fields, ctx.request.files] = await new Promise(
+          (resolve: (x: [Fields, Files]) => void, reject: (err: any) => void) => {
+            form.parse(ctx.req, (err, fields, files) => {
+              // Reject and our app error handler will pick it up
+              if (err) {
+                return reject(err);
+              }
+
+              resolve([fields, files]);
+            });
+          }
+        );
+
+        return next();
+      });
+    }
 
     // Add any default middleware.
     this.use(bodyParser());
