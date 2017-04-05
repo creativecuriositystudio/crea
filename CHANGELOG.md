@@ -1,3 +1,7 @@
+# 0.4.2
+
+* Fix association option not being considered on list actions
+
 # 0.4.1
 
 * Fix multipart incorrectly skipping multiparts

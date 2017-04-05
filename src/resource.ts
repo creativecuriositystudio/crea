@@ -237,23 +237,23 @@ export class Resource<T extends Model> extends Router {
       // Kinda hacky, but we have to do this to make sure
       // we're fetching by whatever primary key they've defined.
       resource.query = resource.query.where(_ => db.getInternalModelPrimary(this.model).eq(ctx.params.id));
+    }
 
-      // Iterate through all of the associations add them as includes.
-      // FIXME: Figure out a prettier way to do this. Perhaps even add it to Squell.
-      if (this.resourceOptions.associations) {
-        let assocs = getAssociations(model);
+    // Iterate through all of the associations add them as includes.
+    // FIXME: Figure out a prettier way to do this. Perhaps even add it to Squell.
+    if (this.resourceOptions.associations) {
+      let assocs = getAssociations(model);
 
-        for (let key of Object.keys(assocs)) {
-          let options = assocs[key];
-          let target = options.target;
+      for (let key of Object.keys(assocs)) {
+        let options = assocs[key];
+        let target = options.target;
 
-          // Lazily load the target if required.
-          if (isLazyLoad(target)) {
-            target = (<() => ModelConstructor<any>> target)();
-          }
-
-          resource.query = resource.query.include(<ModelConstructor<any>> target, m => new squell.AssocAttribute(key));
+        // Lazily load the target if required.
+        if (isLazyLoad(target)) {
+          target = (<() => ModelConstructor<any>> target)();
         }
+
+        resource.query = resource.query.include(<ModelConstructor<any>> target, m => new squell.AssocAttribute(key));
       }
     }
 
