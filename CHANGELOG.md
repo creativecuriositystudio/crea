@@ -1,3 +1,7 @@
+# 0.4.3
+
+* Fix delete route so it actually works
+
 # 0.4.2
 
 * Fix association option not being considered on list actions
