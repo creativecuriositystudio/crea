@@ -961,7 +961,7 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleDeleteFetch(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
-    ctx.resource.data = await ctx.resource.query.findOne();
+    ctx.resource.instance = await ctx.resource.query.findOne();
 
     return next();
   }
