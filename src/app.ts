@@ -9,7 +9,7 @@ import { Model, ValidationError } from 'modelsafe';
 
 import { UserNotFoundError, TokenInvalidError, TokenExpiryError } from './auth';
 import { Responder, ResponderConstructor } from './responder';
-import { Router, RouterContext } from './router';
+import { RouterContext } from './router';
 
 /** An error in an application. */
 export class ApplicationError extends Error {
@@ -43,6 +43,7 @@ export class ApplicationError extends Error {
    * All of the registered handlers for coercing non-`ApplicationErrors` into
    * their relevant `ApplicationError` form.
    */
+  // tslint:disable-next-line:ban-types
   static handlers: Map<Function, (err: any) => ApplicationError> = new Map();
 
   /**
@@ -61,18 +62,23 @@ export class ApplicationError extends Error {
    */
   static coerce(err: Error | ApplicationError): ApplicationError {
     if (err instanceof ApplicationError) {
-      return <ApplicationError> err;
+      return err as ApplicationError;
     }
 
     // Lookup the registered handler by error constructor as the key.
     let handler = ApplicationError.handlers.get(err.constructor as typeof Error);
 
     if (typeof (handler) === 'function') {
-      return handler(<Error> err);
+      return handler(err as Error);
     }
 
     // No handler found, just coerce to a 500 Internal Server Error.
-    return new ApplicationError(500, err.message);
+    let result = new ApplicationError(500, err.message);
+
+    // Merge the stacks.
+    result.stack = `${result.stack}\ncaused by ${err.stack}`;
+
+    return result;
   }
 
   /**
@@ -89,6 +95,7 @@ export class ApplicationError extends Error {
    * @param ctor The error constructor to automatically coerce using the handler.
    * @param handler The handler that turns the relevant error type into an application error.
    */
+  // tslint:disable-next-line:ban-types
   static register<T extends Error>(ctor: Function, handler: (err: T) => ApplicationError) {
     ApplicationError.handlers.set(ctor, handler);
   }
@@ -172,7 +179,7 @@ export class Application extends KoaApplication {
 
         // If a non-boolean was provided, extend the form with the user's options.
         if (typeof (options.multipart) !== 'boolean') {
-          _.extend(form, <Partial<IncomingForm>> options.multipart);
+          _.extend(form, options.multipart as Partial<IncomingForm>);
         }
 
         [ctx.request.fields, ctx.request.files] = await new Promise(

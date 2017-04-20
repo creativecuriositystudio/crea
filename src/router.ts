@@ -48,6 +48,4 @@ export interface RouterContext extends KoaRouter.IRouterContext {
  * A web application's middleware interface. This will just use
  * our specific router context rather than the default.
  */
-export interface Middleware {
-  (ctx: RouterContext, next: () => Promise<any>): Promise<any>;
-}
+export type Middleware = (ctx: RouterContext, next: () => Promise<any>) => Promise<any>;

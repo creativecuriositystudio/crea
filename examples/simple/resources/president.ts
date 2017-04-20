@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import { Resource } from '../../../dist/index';
 
 import { President } from '../models/president';

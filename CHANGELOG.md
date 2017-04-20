@@ -1,3 +1,8 @@
+# 0.5.0
+
+* Upgrade to Squell & ModelSafe `0.7.0`
+* Improve error stack generated when coercing to `ApplicationError` to include the old stack
+
 # 0.4.3
 
 * Fix delete route so it actually works

@@ -7,8 +7,6 @@
  */
 import { decode, encode } from 'jwt-simple';
 import * as moment from 'moment';
-import * as squell from 'squell';
-import * as _ from 'lodash';
 
 import { RouterContext, Middleware } from './router';
 
@@ -231,7 +229,7 @@ export abstract class Auth<T> {
    * @rejects UserNotFoundError, Error
    * @see login
    */
-  protected async loginUser(ctx: RouterContext): Promise<T> {
+  protected async loginUser(_ctx: RouterContext): Promise<T> {
     throw new Error('Login unimplemented');
   }
 
@@ -250,7 +248,7 @@ export abstract class Auth<T> {
    * @rejects Error
    * @see login
    */
-  protected async registerUser(ctx: RouterContext): Promise<T> {
+  protected async registerUser(_ctx: RouterContext): Promise<T> {
     throw new Error('Register unimplemented');
   }
 
@@ -272,7 +270,6 @@ export abstract class Auth<T> {
       ... options
     };
 
-    let this_ = this;
     let header = options.header.toLowerCase();
 
     return async (ctx: RouterContext, next: () => Promise<any>): Promise<any> => {
@@ -306,7 +303,7 @@ export abstract class Auth<T> {
   public login(): Middleware {
     let self = this;
 
-    return async (ctx: RouterContext, next: () => Promise<any>): Promise<any> => {
+    return async (ctx: RouterContext, _next: () => Promise<any>): Promise<any> => {
       let user = await self.loginUser(ctx);
 
       ctx.body = {
@@ -326,7 +323,7 @@ export abstract class Auth<T> {
   public register(): Middleware {
     let self = this;
 
-    return async (ctx: RouterContext, next: () => Promise<any>): Promise<any> => {
+    return async (ctx: RouterContext, _next: () => Promise<any>): Promise<any> => {
       let user = await self.registerUser(ctx);
 
       ctx.body = {
