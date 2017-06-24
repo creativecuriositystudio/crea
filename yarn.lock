@@ -55,13 +55,13 @@
     "@types/cookies" "*"
     "@types/node" "*"
 
-"@types/lodash@*", "@types/lodash@^4.14.37", "@types/lodash@^4.14.53", "@types/lodash@^4.14.57":
-  version "4.14.57"
-  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.57.tgz#f0095fb15ec1004455613f3ad73766583e62f830"
-
-"@types/lodash@^4.14.62":
+"@types/lodash@*", "@types/lodash@^4.14.62":
   version "4.14.62"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.62.tgz#8674f9861582148a60b7a89cb260f11378d11683"
+
+"@types/lodash@^4.14.37", "@types/lodash@^4.14.53", "@types/lodash@^4.14.57":
+  version "4.14.57"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.57.tgz#f0095fb15ec1004455613f3ad73766583e62f830"
 
 "@types/marked@0.0.28":
   version "0.0.28"
@@ -104,6 +104,10 @@
 "@types/validator@*":
   version "5.7.35"
   resolved "https://registry.yarnpkg.com/@types/validator/-/validator-5.7.35.tgz#2f5708d9e561440302a16a6a4d779eb93ee95e3e"
+
+"@types/validator@^6.2.0":
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/@types/validator/-/validator-6.2.0.tgz#020322fe1929f69889eb675a1bdb5a98394b71f0"
 
 abbrev@1:
   version "1.0.9"
@@ -573,7 +577,7 @@ getpass@^0.1.1:
   dependencies:
     assert-plus "^1.0.0"
 
-glob@7.0.5, glob@^7.0.0, glob@^7.0.5:
+glob@7.0.5:
   version "7.0.5"
   resolved "https://registry.yarnpkg.com/glob/-/glob-7.0.5.tgz#b4202a69099bbb4d292a7c1b95b6682b67ebdc95"
   dependencies:
@@ -584,7 +588,7 @@ glob@7.0.5, glob@^7.0.0, glob@^7.0.5:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-glob@^7.1.1:
+glob@^7.0.0, glob@^7.0.5, glob@^7.1.1:
   version "7.1.1"
   resolved "https://registry.yarnpkg.com/glob/-/glob-7.1.1.tgz#805211df04faaf1c63a3600306cdf5ade50b2ec8"
   dependencies:
@@ -1068,15 +1072,17 @@ mocha@^3.2.0:
     mkdirp "0.5.1"
     supports-color "3.1.2"
 
-"modelsafe@>=0.7.1 <0.8.0":
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/modelsafe/-/modelsafe-0.7.1.tgz#13477a6648062e8a680c4f2875688721d8c7346a"
+modelsafe@^1.0.0-alpha.7:
+  version "1.0.0-alpha.7"
+  resolved "https://registry.yarnpkg.com/modelsafe/-/modelsafe-1.0.0-alpha.7.tgz#0747f46b7a59ea8c6b50c78b62fed9ee0c85c7c6"
   dependencies:
     "@types/lodash" "^4.14.53"
     "@types/reflect-metadata" "0.0.5"
+    "@types/validator" "^6.2.0"
     lodash "^4.17.2"
     reflect-metadata "^0.1.8"
     typescript "^2.2.2"
+    validator "^7.0.0"
 
 moment-timezone@^0.5.4:
   version "0.5.11"
@@ -1308,11 +1314,7 @@ request@^2.79.0:
     tunnel-agent "~0.4.1"
     uuid "^3.0.0"
 
-resolve@^1.1.6:
-  version "1.1.7"
-  resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.1.7.tgz#203114d82ad2c5ed9e8e0411b3932875e889e97b"
-
-resolve@^1.3.2:
+resolve@^1.1.6, resolve@^1.3.2:
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.3.2.tgz#1f0442c9e0cbb8136e87b9305f932f46c7f28235"
   dependencies:
@@ -1471,16 +1473,16 @@ sqlite@^2.2.4:
   dependencies:
     sqlite3 "^3.1.8"
 
-squell@~0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/squell/-/squell-0.7.0.tgz#b4a682c72c21d6f42a3e98aa07ac0f789baad2a7"
+squell@^1.0.0-alpha.2:
+  version "1.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/squell/-/squell-1.0.0-alpha.2.tgz#b95fd0d47dde39dd1deb97594e2bc7264501f44a"
   dependencies:
     "@types/lodash" "^4.14.62"
     "@types/reflect-metadata" "0.0.5"
     "@types/sequelize" "^4.0.39"
     lodash "^4.17.4"
     reflect-metadata "^0.1.8"
-    typescript "^2.2.0"
+    typescript "^2.2.2"
 
 sshpk@^1.7.0:
   version "1.10.2"
@@ -1749,6 +1751,10 @@ v8flags@^2.0.11:
 validator@^5.6.0:
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/validator/-/validator-5.7.0.tgz#7a87a58146b695ac486071141c0c49d67da05e5c"
+
+validator@^7.0.0:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-7.1.0.tgz#331695afc7e6d72f980bddd68aa296d6b3d6c8b6"
 
 vary@^1.0.0:
   version "1.1.0"

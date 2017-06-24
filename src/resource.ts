@@ -251,7 +251,7 @@ export class Resource<T extends Model> extends Router {
           target = (target as () => ModelConstructor<any>)();
         }
 
-        resource.query = resource.query.include(target as ModelConstructor<any>, _m => new squell.AssocAttribute(key));
+        resource.query = resource.query.include(target as ModelConstructor<any>, _m => new squell.AssociationQueryable(key));
       }
     }
 
@@ -272,9 +272,9 @@ export class Resource<T extends Model> extends Router {
     }
 
     if (ctx.resource.multiple) {
-      ctx.responder.multiple(ctx.resource.instance as Partial<T>[]);
+      ctx.responder.multiple(ctx.resource.instance as T[]);
     } else {
-      ctx.responder.single(ctx.resource.instance as Partial<T>);
+      ctx.responder.single(ctx.resource.instance as T);
     }
 
     return next();

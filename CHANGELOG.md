@@ -1,5 +1,9 @@
 # 0.5.0
 
+* Upgrade to squell & modelsafe `1.0.0-alpha`
+
+# 0.5.0
+
 * Upgrade to Squell & ModelSafe `0.7.0`
 * Improve error stack generated when coercing to `ApplicationError` to include the old stack
 
