@@ -1,6 +1,6 @@
 {
   "name": "restla",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "main": "dist/index.js",
   "bugs": "https://github.com/creativecuriositystudio/restla/issues",
   "keywords": [
@@ -36,23 +36,23 @@
   },
   "author": "Creative Curiosity",
   "peerDependencies": {
-    "squell": "^1.0.0-alpha.2",
-    "modelsafe": "^1.0.0-alpha.7"
+    "modelsafe": "^1.0.0-alpha.7",
+    "squell": "^1.0.0-alpha.2"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.33",
     "@types/should": "^8.1.30",
     "husky": "^0.13.2",
     "mocha": "^3.2.0",
-    "squell": "^1.0.0-alpha.2",
-    "modelsafe": "^1.0.0-alpha.7",
+    "modelsafe": "^1.0.0-alpha.12",
+    "sequelize": "^4.4.2",
     "should": "^11.1.2",
     "sqlite": "^2.2.4",
+    "squell": "^1.0.0-alpha.16",
     "ts-node": "^1.7.2",
     "tslint": "^5.0.0",
     "tslint-config-ccs": "^0.5.0",
-    "typedoc": "^0.5.5",
-    "sequelize": "^4.0.0-2"
+    "typedoc": "^0.5.5"
   },
   "dependencies": {
     "@types/formidable": "^1.0.29",
@@ -61,6 +61,7 @@
     "@types/koa-bodyparser": "^3.0.20",
     "@types/koa-router": "^7.0.21",
     "@types/lodash": "^4.14.57",
+    "@types/sequelize": "^4.0.67",
     "formidable": "^1.1.1",
     "jwt-simple": "^0.5.1",
     "koa": "^2.0.0",

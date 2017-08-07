@@ -1,4 +1,9 @@
-# 0.5.0
+# 0.6.1
+
+* Simplify association includes, and set 'associateOnly' so assocs' data isn't saved when the parent is updated
+* Upgrade squell and modelsafe
+
+# 0.6.0
 
 * Upgrade to squell & modelsafe `1.0.0-alpha`
 
