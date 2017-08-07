@@ -238,22 +238,7 @@ export class Resource<T extends Model> extends Router {
     }
 
     // Iterate through all of the associations add them as includes.
-    // FIXME: Figure out a prettier way to do this. Perhaps even add it to Squell.
-    if (this.resourceOptions.associations) {
-      let assocs = getAssociations(model);
-
-      for (let key of Object.keys(assocs)) {
-        let options = assocs[key];
-        let target = options.target;
-
-        // Lazily load the target if required.
-        if (isLazyLoad(target)) {
-          target = (target as () => ModelConstructor<any>)();
-        }
-
-        resource.query = resource.query.include(target as ModelConstructor<any>, _m => new squell.AssociationQueryable(key));
-      }
-    }
+    if (this.resourceOptions.associations) resource.query = resource.query.includeAll({ associateOnly: true });
 
     ctx.resource = resource;
 
