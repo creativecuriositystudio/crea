@@ -7,6 +7,7 @@
  */
 import { decode, encode } from 'jwt-simple';
 import * as moment from 'moment';
+import Acl = require('acl');
 
 import { RouterContext, Middleware } from './router';
 
@@ -93,7 +94,7 @@ export interface AuthInitOptions {
  * internal representation of a user model.
  *
  * It's important that the relevant middleware is used on either
- * the Crea application or a Crea router.
+ * the application or a router.
  *
  * @see init, login, register
  * @param T The type representing a user model.
@@ -213,6 +214,15 @@ export abstract class Auth<T> {
   protected abstract getIdentifier(user: T): string;
 
   /**
+   * An abstract method that fetches the roles for a specific user
+   * in order to restrict access to resources/routes
+   *
+   * @param user The user to get the roles for
+   * @returns    The user roles
+   */
+  protected abstract getRoles(user: T): string[];
+
+  /**
    * Log a user in using a provided router context
    * with all of the request information available.
    * This should reject with a UserNotFoundError
@@ -257,7 +267,7 @@ export abstract class Auth<T> {
    * and if so populates the router context with the user
    * object.
    *
-   * This should be added on the Crea application during
+   * This should be added on the application during
    * its configuration.
    *
    * @returns The auth initialization middleware.
@@ -295,8 +305,7 @@ export abstract class Auth<T> {
   /**
    * A middleware used to login a user.
    *
-   * This should be added on the Crea router
-   * at the relevant URL.
+   * This should be added on the router at the relevant URL.
    *
    * @returns The auth login middleware.
    */
@@ -315,8 +324,7 @@ export abstract class Auth<T> {
   /**
    * A middleware used to register a user.
    *
-   * This should be added on the Crea router
-   * at the relevant URL.
+   * This should be added on the router at the relevant URL.
    *
    * @returns The auth registration middleware.
    */
@@ -329,6 +337,27 @@ export abstract class Auth<T> {
       ctx.body = {
         token: await self.produceToken(user)
       };
+    };
+  }
+
+  /**
+   * A middleware used to ensure a user is authorised to access a resource/route
+   *
+   * This should be added on the router at the relevant URL.
+   *
+   * @returns The authorisation middleware
+   */
+  public authorised(acl: Acl, resources: string | string[], perms: string | string[]): Middleware {
+    let self = this;
+
+    return async (ctx: RouterContext, _next: () => Promise<any>): Promise<any> => {
+      // TODO also check route perms rather than returning just false
+      const isAllowed = ctx instanceof ResourceContext ?
+        acl.isAllowed(self.getIdentifier(ctx.user), ctx.resource.name, ctx.resource.actionName) :
+        false;
+      if (!isAllowed) throw new ApplicationError(403, 'Forbidden');
+
+      return next();
     };
   }
 }

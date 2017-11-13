@@ -4,6 +4,7 @@
 import * as squell from 'squell';
 import * as _ from 'lodash';
 import { Model, ModelConstructor } from 'modelsafe';
+import Acl = require('acl');
 
 import { ApplicationError } from './app';
 import { Router, RouterContext } from './router';
@@ -46,6 +47,12 @@ export type ResourceMiddleware<T extends Model> = (this: Resource<T>, ctx: Resou
  * The resource-specific data associated with a resource context.
  */
 export interface ResourceData<T extends Model> {
+  /** Resource name */
+  name: string;
+
+  /** Action name */
+  actionName: string;
+
   /** The model constructor for the resource context. */
   model: ModelConstructor<T>;
 
@@ -86,11 +93,20 @@ export interface ResourceContext<T extends Model> extends RouterContext {
 
 /** Options to customize the behaviour of a REST resource. */
 export interface ResourceOptions {
+  /** Resource name */
+  name: string;
+
   /** Which REST resource actions should be enabled. */
   actions?: ResourceAction[];
 
   /** Whether to include all associations on the resource. Defaults to false. */
   associations?: boolean;
+
+  /** ACL */
+  acl: Acl;
+
+  /** List of roles that are allowed to access the given actions. '*' means all actions */
+  allowedRoles: object;
 }
 
 /**
@@ -132,6 +148,7 @@ export class Resource<T extends Model> extends Router {
     this.db = db;
     this.model = model;
     this.resourceOptions = {
+      name: null,
       associations: false,
       actions: [
         ResourceAction.LIST,
@@ -140,7 +157,8 @@ export class Resource<T extends Model> extends Router {
         ResourceAction.UPDATE,
         ResourceAction.DELETE
       ],
-
+      acl: null,
+      allowedRoles: {},
       ... options
     };
 
@@ -293,7 +311,9 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleListStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     ctx.resource = {
+      actionName: 'list',
       multiple: true
+      ... ctx.resource,
     } as ResourceData<T>;
 
     return this.process(ctx, this.handleStart, next);
@@ -441,6 +461,11 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleReadStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    ctx.resource = {
+      name: this.resourceOptions.name,
+      actionName: 'read',
+    } as ResourceData<T>;
+
     return this.process(ctx, this.handleStart, next);
   }
 
@@ -586,6 +611,11 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleCreateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    ctx.resource = {
+      actionName: 'create',
+      ... ctx.resource,
+    } as ResourceData<T>;
+
     return this.process(ctx, this.handleStart, next);
   }
 
@@ -731,6 +761,11 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleUpdateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    ctx.resource = {
+      actionName: 'update',
+      ... ctx.resource,
+    } as ResourceData<T>;
+
     return this.process(ctx, this.handleStart, next);
   }
 
@@ -914,6 +949,11 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleDeleteStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    ctx.resource = {
+      actionName: 'delete',
+      ... ctx.resource,
+    } as ResourceData<T>;
+
     return this.process(ctx, this.handleStart, next);
   }
 
