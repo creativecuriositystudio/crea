@@ -7,7 +7,7 @@ import * as _ from 'lodash';
 import { Fields, Files, IncomingForm } from 'formidable';
 import { Model, ValidationError } from 'modelsafe';
 
-import { UserNotFoundError, TokenInvalidError, TokenExpiryError } from './auth';
+import * as auth from './auth';
 import { Responder, ResponderConstructor } from './responder';
 import { RouterContext } from './router';
 
@@ -58,7 +58,7 @@ export class ApplicationError extends Error {
    * * restla.TokenExpiryError: 401 Unauthorised
    * * restla.TokenInvalidError: 401 Unauthorised
    * * restla.UserNotFoundError: 401 Unauthorised
-   * * restla.AuthorizationError: 403 Forbidden
+   * * restla.AuthorisationError: 403 Forbidden
    */
   static coerce(err: Error | ApplicationError): ApplicationError {
     if (err instanceof ApplicationError) {
@@ -105,16 +105,20 @@ ApplicationError.register(ValidationError, <T extends Model>(err: ValidationErro
   return new ApplicationError(400, err.message, err.errors);
 });
 
-ApplicationError.register(TokenInvalidError, (err: TokenInvalidError): ApplicationError => {
+ApplicationError.register(auth.TokenInvalidError, (err: auth.TokenInvalidError): ApplicationError => {
   return new ApplicationError(401, err.message);
 });
 
-ApplicationError.register(TokenExpiryError, (err: TokenExpiryError): ApplicationError => {
+ApplicationError.register(auth.TokenExpiryError, (err: auth.TokenExpiryError): ApplicationError => {
   return new ApplicationError(401, err.message);
 });
 
-ApplicationError.register(UserNotFoundError, (err: UserNotFoundError): ApplicationError => {
+ApplicationError.register(auth.UserNotFoundError, (err: auth.UserNotFoundError): ApplicationError => {
   return new ApplicationError(401, err.message);
+});
+
+ApplicationError.register(auth.AuthorisationError, (err: auth.AuthorisationError): ApplicationError => {
+  return new ApplicationError(403, err.message);
 });
 
 /** Options for running an application. */

@@ -7,9 +7,12 @@
  */
 import { decode, encode } from 'jwt-simple';
 import * as moment from 'moment';
-import Acl = require('acl');
 
 import { RouterContext, Middleware } from './router';
+
+export interface Acl {
+  isAllowed(userId: string, resource: string, permissions: string | string[]): boolean;
+}
 
 /** Raised when a user is not found during authentication. */
 export class UserNotFoundError extends Error {
@@ -50,6 +53,20 @@ export class TokenInvalidError extends Error {
     // Required in order for error instances to be able to use instanceof.
     // SEE: https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md
     Object.setPrototypeOf(this, TokenInvalidError.prototype);
+  }
+}
+
+/** Raised when access to a route isn't allowed */
+export class AuthorisationError extends Error {
+  constructor(message?: string) {
+    super(message);
+
+    this.name = 'AuthorisationError';
+    this.stack = new Error().stack;
+
+    // Required in order for error instances to be able to use instanceof.
+    // SEE: https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md
+    Object.setPrototypeOf(this, AuthorisationError.prototype);
   }
 }
 
@@ -107,14 +124,19 @@ export abstract class Auth<T> {
    * to the system and there is no guarantee that this will work smoothly
    * with whatever MVC frontend a client is using.
    */
-  private secret: string;
+  protected secret: string;
 
   /**
    * The number of days that generated authentication tokens will
    * last for. This should be a high number and defaults
    * to two weeks.
    */
-  private expiryDays: number;
+  protected expiryDays: number;
+
+  /**
+   * The ACL authorisation to check permissions with
+   */
+  protected acl: Acl;
 
   /**
    * @param secret The secret key.
@@ -125,9 +147,10 @@ export abstract class Auth<T> {
    * @param secret     The secret key.
    * @param expiryDays The number of days auth tokens will be valid for.
    */
-  constructor(secret: string, expiryDays: number = 14) {
+  constructor(secret: string, expiryDays: number = 14, acl?: Acl) {
     this.secret = secret;
     this.expiryDays = expiryDays;
+    this.acl = acl;
   }
 
   /**
@@ -341,21 +364,18 @@ export abstract class Auth<T> {
   }
 
   /**
-   * A middleware used to ensure a user is authorised to access a resource/route
+   * A middleware used to ensure a user is authorised to access a route
    *
    * This should be added on the router at the relevant URL.
    *
    * @returns The authorisation middleware
    */
-  public authorised(acl: Acl, resources: string | string[], perms: string | string[]): Middleware {
+  public authorised(resource: string, permissions: string | string[]): Middleware {
     let self = this;
 
-    return async (ctx: RouterContext, _next: () => Promise<any>): Promise<any> => {
-      // TODO also check route perms rather than returning just false
-      const isAllowed = ctx instanceof ResourceContext ?
-        acl.isAllowed(self.getIdentifier(ctx.user), ctx.resource.name, ctx.resource.actionName) :
-        false;
-      if (!isAllowed) throw new ApplicationError(403, 'Forbidden');
+    return async (ctx: RouterContext, next: () => Promise<any>): Promise<any> => {
+      const isAllowed = self.acl.isAllowed(self.getIdentifier(ctx.user), resource, permissions);
+      if (!isAllowed) throw new AuthorisationError();
 
       return next();
     };

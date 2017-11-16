@@ -4,10 +4,10 @@
 import * as squell from 'squell';
 import * as _ from 'lodash';
 import { Model, ModelConstructor } from 'modelsafe';
-import Acl = require('acl');
 
 import { ApplicationError } from './app';
 import { Router, RouterContext } from './router';
+import { Auth } from './auth';
 
 /** A type of action on a REST resource. */
 export enum ResourceAction {
@@ -92,7 +92,7 @@ export interface ResourceContext<T extends Model> extends RouterContext {
 }
 
 /** Options to customize the behaviour of a REST resource. */
-export interface ResourceOptions {
+export interface ResourceOptions<T extends Model> {
   /** Resource name */
   name: string;
 
@@ -102,8 +102,8 @@ export interface ResourceOptions {
   /** Whether to include all associations on the resource. Defaults to false. */
   associations?: boolean;
 
-  /** ACL */
-  acl: Acl;
+  /** Authoriser for authenticating route access */
+  auth: Auth<T>;
 
   /** List of roles that are allowed to access the given actions. '*' means all actions */
   allowedRoles: object;
@@ -127,7 +127,7 @@ export interface ResourceOptions {
  */
 export class Resource<T extends Model> extends Router {
   /** Any resource options. */
-  protected resourceOptions: ResourceOptions;
+  protected resourceOptions: ResourceOptions<T>;
 
   /** The Squell database connection the resource will use. */
   protected db: squell.Database;
@@ -142,7 +142,7 @@ export class Resource<T extends Model> extends Router {
    * @param model The Squell model constructor to query.
    * @param resOptions Any resource options to use.
    */
-  constructor(db: squell.Database, model: ModelConstructor<T>, options?: ResourceOptions) {
+  constructor(db: squell.Database, model: ModelConstructor<T>, options?: ResourceOptions<T>) {
     super();
 
     this.db = db;
@@ -157,7 +157,7 @@ export class Resource<T extends Model> extends Router {
         ResourceAction.UPDATE,
         ResourceAction.DELETE
       ],
-      acl: null,
+      auth: null,
       allowedRoles: {},
       ... options
     };
@@ -264,6 +264,18 @@ export class Resource<T extends Model> extends Router {
   }
 
   /**
+   * Handle authenticating a resource request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async handleAuth(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return this.resourceOptions.auth ?
+      this.process(ctx, this.resourceOptions.auth.authorised(ctx.resource.name, ctx.resource.actionName), next) :
+      next();
+  }
+
+  /**
    * Handle sending a resource request.
    *
    * @param ctx The resource context.
@@ -311,12 +323,42 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleListStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     ctx.resource = {
+      name: this.resourceOptions.name,
       actionName: 'list',
       multiple: true
-      ... ctx.resource,
     } as ResourceData<T>;
 
     return this.process(ctx, this.handleStart, next);
+  }
+
+  /**
+   * Do something before authenticating a resource list request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeListAuth(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Handle authenticating a resource list request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async handleListAuth(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return this.process(ctx, this.handleAuth, next);
+  }
+
+  /**
+   * Do something after authenticating a resource list request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterListAuth(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
   }
 
   /**
@@ -480,6 +522,36 @@ export class Resource<T extends Model> extends Router {
   }
 
   /**
+   * Do something before authenticating a resource read request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeReadAuth(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Handle authenticating a resource read request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async handleReadAuth(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return this.process(ctx, this.handleAuth, next);
+  }
+
+  /**
+   * Do something after authenticating a resource read request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterReadAuth(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
    * Do something before fetching a resource read request.
    *
    * @param ctx The resource context.
@@ -612,8 +684,8 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleCreateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     ctx.resource = {
+      name: this.resourceOptions.name,
       actionName: 'create',
-      ... ctx.resource,
     } as ResourceData<T>;
 
     return this.process(ctx, this.handleStart, next);
@@ -626,6 +698,36 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async afterCreateStart(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before authenticating a resource create request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeCreateAuth(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Handle authenticating a resource create request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async handleCreateAuth(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return this.process(ctx, this.handleAuth, next);
+  }
+
+  /**
+   * Do something after authenticating a resource create request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterCreateAuth(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     return next();
   }
 
@@ -762,8 +864,8 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleUpdateStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     ctx.resource = {
+      name: this.resourceOptions.name,
       actionName: 'update',
-      ... ctx.resource,
     } as ResourceData<T>;
 
     return this.process(ctx, this.handleStart, next);
@@ -776,6 +878,36 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async afterUpdateStart(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before authenticating a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeUpdateAuth(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Handle authenticating a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async handleUpdateAuth(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return this.process(ctx, this.handleAuth, next);
+  }
+
+  /**
+   * Do something after authenticating a resource update request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterUpdateAuth(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     return next();
   }
 
@@ -950,8 +1082,8 @@ export class Resource<T extends Model> extends Router {
    */
   protected async handleDeleteStart(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     ctx.resource = {
+      name: this.resourceOptions.name,
       actionName: 'delete',
-      ... ctx.resource,
     } as ResourceData<T>;
 
     return this.process(ctx, this.handleStart, next);
@@ -964,6 +1096,36 @@ export class Resource<T extends Model> extends Router {
    * @returns A promise handling the request.
    */
   protected async afterDeleteStart(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Do something before authenticating a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async beforeDeleteAuth(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return next();
+  }
+
+  /**
+   * Handle authenticating a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async handleDeleteAuth(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
+    return this.process(ctx, this.handleAuth, next);
+  }
+
+  /**
+   * Do something after authenticating a resource delete request.
+   *
+   * @param ctx The resource context.
+   * @returns A promise handling the request.
+   */
+  protected async afterDeleteAuth(_ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     return next();
   }
 
@@ -1112,6 +1274,9 @@ export class Resource<T extends Model> extends Router {
       this.beforeDeleteStart,
       this.handleDeleteStart,
       this.afterDeleteStart,
+      this.beforeDeleteAuth,
+      this.handleDeleteAuth,
+      this.afterDeleteAuth,
       this.beforeDeleteFetch,
       this.handleDeleteFetch,
       this.afterDeleteFetch,
