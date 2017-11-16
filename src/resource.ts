@@ -40,7 +40,7 @@ export enum ResourceAction {
  * only one is handled during responding a request,
  * unless it is doing something like parsing cookies.
  */
-export type ResourceMiddleware<T extends Model> = (this: Resource<T>, ctx: ResourceContext<T>,
+export type ResourceMiddleware<T extends Model, U> = (this: Resource<T, U>, ctx: ResourceContext<T>,
                                                    next: () => Promise<any>) => Promise<any>;
 
 /**
@@ -92,9 +92,9 @@ export interface ResourceContext<T extends Model> extends RouterContext {
 }
 
 /** Options to customize the behaviour of a REST resource. */
-export interface ResourceOptions<T extends Model> {
+export interface ResourceOptions<T> {
   /** Resource name */
-  name: string;
+  name?: string;
 
   /** Which REST resource actions should be enabled. */
   actions?: ResourceAction[];
@@ -103,10 +103,7 @@ export interface ResourceOptions<T extends Model> {
   associations?: boolean;
 
   /** Authoriser for authenticating route access */
-  auth: Auth<T>;
-
-  /** List of roles that are allowed to access the given actions. '*' means all actions */
-  allowedRoles: object;
+  auth?: Auth<T>;
 }
 
 /**
@@ -125,9 +122,9 @@ export interface ResourceOptions<T extends Model> {
  * router.use('/users', resource.routes());
  * ```
  */
-export class Resource<T extends Model> extends Router {
+export class Resource<T extends Model, U> extends Router {
   /** Any resource options. */
-  protected resourceOptions: ResourceOptions<T>;
+  protected resourceOptions: ResourceOptions<U>;
 
   /** The Squell database connection the resource will use. */
   protected db: squell.Database;
@@ -142,13 +139,13 @@ export class Resource<T extends Model> extends Router {
    * @param model The Squell model constructor to query.
    * @param resOptions Any resource options to use.
    */
-  constructor(db: squell.Database, model: ModelConstructor<T>, options?: ResourceOptions<T>) {
+  constructor(db: squell.Database, model: ModelConstructor<T>, options?: ResourceOptions<U>) {
     super();
 
     this.db = db;
     this.model = model;
     this.resourceOptions = {
-      name: null,
+      name: _.kebabCase(this.constructor.name).replace(/-resource$/, ''),
       associations: false,
       actions: [
         ResourceAction.LIST,
@@ -157,8 +154,6 @@ export class Resource<T extends Model> extends Router {
         ResourceAction.UPDATE,
         ResourceAction.DELETE
       ],
-      auth: null,
-      allowedRoles: {},
       ... options
     };
 
@@ -197,12 +192,12 @@ export class Resource<T extends Model> extends Router {
    * @param parentNext The next function of the middleware, if available.
    * @returns A promise processing the resource middleware[s].
    */
-  private async process(ctx: ResourceContext<T>, chain: ResourceMiddleware<T> | ResourceMiddleware<T>[],
+  private async process(ctx: ResourceContext<T>, chain: ResourceMiddleware<T, U> | ResourceMiddleware<T, U>[],
                         parentNext?: () => Promise<any>): Promise<any> {
-    let mws = chain as ResourceMiddleware<T>[];
+    let mws = chain as ResourceMiddleware<T, U>[];
 
     if (!Array.isArray(chain)) {
-      mws = [chain as ResourceMiddleware<T>];
+      mws = [chain as ResourceMiddleware<T, U>];
     }
 
     if (typeof (parentNext) !== 'function') {
@@ -474,6 +469,9 @@ export class Resource<T extends Model> extends Router {
       this.beforeListStart,
       this.handleListStart,
       this.afterListStart,
+      this.beforeListAuth,
+      this.handleListAuth,
+      this.afterListAuth,
       this.beforeListFetch,
       this.handleListFetch,
       this.afterListFetch,
@@ -654,6 +652,9 @@ export class Resource<T extends Model> extends Router {
       this.beforeReadStart,
       this.handleReadStart,
       this.afterReadStart,
+      this.beforeReadAuth,
+      this.handleReadAuth,
+      this.afterReadAuth,
       this.beforeReadFetch,
       this.handleReadFetch,
       this.afterReadFetch,
@@ -834,6 +835,9 @@ export class Resource<T extends Model> extends Router {
       this.beforeCreateStart,
       this.handleCreateStart,
       this.afterCreateStart,
+      this.beforeCreateAuth,
+      this.handleCreateAuth,
+      this.afterCreateAuth,
       this.beforeCreateWrite,
       this.handleCreateWrite,
       this.afterCreateWrite,
@@ -1049,6 +1053,9 @@ export class Resource<T extends Model> extends Router {
       this.beforeUpdateStart,
       this.handleUpdateStart,
       this.afterUpdateStart,
+      this.beforeUpdateAuth,
+      this.handleUpdateAuth,
+      this.afterUpdateAuth,
       this.beforeUpdateFetch,
       this.handleUpdateFetch,
       this.afterUpdateFetch,

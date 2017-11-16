@@ -7,11 +7,15 @@
  */
 import { decode, encode } from 'jwt-simple';
 import * as moment from 'moment';
+import * as Bluebird from 'bluebird';
 
 import { RouterContext, Middleware } from './router';
 
 export interface Acl {
-  isAllowed(userId: string, resource: string, permissions: string | string[]): boolean;
+  isAllowed(userId: string, resource: string, permissions: string | string[]): Bluebird<boolean>;
+  addUserRoles(userId: string, roles: string | string[]): Bluebird<void>;
+  removeUserRoles(userId: string, roles: string | string[]): Bluebird<void>;
+  userRoles(userId: string): Bluebird<string[]>;
 }
 
 /** Raised when a user is not found during authentication. */
@@ -139,11 +143,6 @@ export abstract class Auth<T> {
   protected acl: Acl;
 
   /**
-   * @param secret The secret key.
-   */
-  constructor(secret: string);
-
-  /**
    * @param secret     The secret key.
    * @param expiryDays The number of days auth tokens will be valid for.
    */
@@ -243,7 +242,7 @@ export abstract class Auth<T> {
    * @param user The user to get the roles for
    * @returns    The user roles
    */
-  protected abstract getRoles(user: T): string[];
+  protected abstract async getRoles(user: T): Promise<string[]>;
 
   /**
    * Log a user in using a provided router context
@@ -303,6 +302,7 @@ export abstract class Auth<T> {
       ... options
     };
 
+    let self = this;
     let header = options.header.toLowerCase();
 
     return async (ctx: RouterContext, next: () => Promise<any>): Promise<any> => {
@@ -318,7 +318,13 @@ export abstract class Auth<T> {
 
       // The bearer token is always has the prefix of 'bearer <token>',
       // or 'token <token>'. We only care about the actual token portion.
-      ctx.user = await this.consumeToken(token.split(/\s/g)[1] || '');
+      ctx.user = await self.consumeToken(token.split(/\s/g)[1] || '');
+
+      if (self.acl) {
+        let userId = self.getIdentifier(ctx.user);
+        await self.acl.removeUserRoles(userId, await self.acl.userRoles(userId));
+        await self.acl.addUserRoles(userId, await self.getRoles(ctx.user));
+      }
 
       // Keep going along the chain, with the user available.
       return next();
@@ -374,8 +380,10 @@ export abstract class Auth<T> {
     let self = this;
 
     return async (ctx: RouterContext, next: () => Promise<any>): Promise<any> => {
-      const isAllowed = self.acl.isAllowed(self.getIdentifier(ctx.user), resource, permissions);
-      if (!isAllowed) throw new AuthorisationError();
+      if (self.acl) {
+        const isAllowed = await self.acl.isAllowed(self.getIdentifier(ctx.user), resource, permissions);
+        if (!isAllowed) throw new AuthorisationError();
+      }
 
       return next();
     };

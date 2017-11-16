@@ -1,3 +1,8 @@
+# 0.7.0
+
+* Integrate ACL into `Auth` to allow for authorisation of routes and resources
+* Introduce new `auth` resource milestone where authorisation is performed
+
 # 0.6.1
 
 * Simplify association includes, and set 'associateOnly' so assocs' data isn't saved when the parent is updated

@@ -1,6 +1,6 @@
 {
   "name": "restla",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "main": "dist/index.js",
   "bugs": "https://github.com/creativecuriositystudio/restla/issues",
   "keywords": [
@@ -64,6 +64,7 @@
     "@types/lodash": "^4.14.57",
     "@types/sequelize": "^4.0.67",
     "acl": "^0.4.11",
+    "bluebird": "^3.5.1",
     "formidable": "^1.1.1",
     "jwt-simple": "^0.5.1",
     "koa": "^2.0.0",
