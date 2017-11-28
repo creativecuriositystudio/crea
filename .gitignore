@@ -47,9 +47,8 @@ jspm_packages
 .yarn-integrity
 
 # TypeScript files
-dist
+dist/
 typings
-index.d.ts
 docs
 
 # Other files

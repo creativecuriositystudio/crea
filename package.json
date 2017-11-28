@@ -1,7 +1,6 @@
 {
   "name": "restla",
-  "version": "0.7.2",
-  "main": "dist/index.js",
+  "version": "0.7.3",
   "bugs": "https://github.com/creativecuriositystudio/restla/issues",
   "keywords": [
     "koa",
@@ -22,10 +21,11 @@
     "type": "git",
     "url": "https://github.com/creativecuriositystudio/restla.git"
   },
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "prepush": "npm run lint",
-    "prepublish": "tsc",
+    "prepare": "npm run build",
     "build": "tsc",
     "build:auto": "tsc --watch",
     "docs": "typedoc --out docs lib/index.ts",
