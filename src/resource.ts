@@ -41,7 +41,7 @@ export enum ResourceAction {
  * unless it is doing something like parsing cookies.
  */
 export type ResourceMiddleware<T extends Model, U> = (this: Resource<T, U>, ctx: ResourceContext<T>,
-                                                   next: () => Promise<any>) => Promise<any>;
+                                                      next: () => Promise<any>) => Promise<any>;
 
 /**
  * The resource-specific data associated with a resource context.
