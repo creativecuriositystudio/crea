@@ -1,3 +1,19 @@
+# 0.7.4
+
+* Give an error message when throwing an `AuthorisationError` so it's clear what is going on
+
+# 0.7.3
+
+* Something...
+
+# 0.7.2
+
+* Something...
+
+# 0.7.1
+
+* Bump to fix broken build (missing index type map)
+
 # 0.7.0
 
 * Integrate ACL into `Auth` to allow for authorisation of routes and resources

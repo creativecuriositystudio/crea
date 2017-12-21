@@ -382,7 +382,7 @@ export abstract class Auth<T> {
     return async (ctx: RouterContext, next: () => Promise<any>): Promise<any> => {
       if (self.acl) {
         const isAllowed = await self.acl.isAllowed(self.getIdentifier(ctx.user), resource, permissions);
-        if (!isAllowed) throw new AuthorisationError();
+        if (!isAllowed) throw new AuthorisationError('User not authorised to access resource');
       }
 
       return next();
