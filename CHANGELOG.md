@@ -1,3 +1,7 @@
+# 0.7.5
+
+* Provide better error tracing when coercing an error
+
 # 0.7.4
 
 * Give an error message when throwing an `AuthorisationError` so it's clear what is going on

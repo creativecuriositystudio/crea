@@ -66,14 +66,12 @@ export class ApplicationError extends Error {
     }
 
     // Lookup the registered handler by error constructor as the key.
-    let handler = ApplicationError.handlers.get(err.constructor as typeof Error);
+    const handler = ApplicationError.handlers.get(err.constructor as typeof Error);
 
-    if (typeof (handler) === 'function') {
-      return handler(err as Error);
-    }
-
-    // No handler found, just coerce to a 500 Internal Server Error.
-    let result = new ApplicationError(500, err.message);
+    // Call the handler or create a default error
+    let result = typeof (handler) === 'function' ?
+      handler(err as Error) :
+      new ApplicationError(500, err.message);
 
     // Merge the stacks.
     result.stack = `${result.stack}\ncaused by ${err.stack}`;
