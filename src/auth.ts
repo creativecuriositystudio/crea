@@ -7,7 +7,6 @@
  */
 import { decode, encode } from 'jwt-simple';
 import * as moment from 'moment';
-import * as Bluebird from 'bluebird';
 
 import { RouterContext, Middleware } from './router';
 
