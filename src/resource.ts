@@ -10,22 +10,7 @@ import { Router, RouterContext } from './router';
 import { Auth } from './auth';
 
 /** A type of action on a REST resource. */
-export enum ResourceAction {
-  /** GET /:id */
-  READ,
-
-  /** GET / */
-  LIST,
-
-  /** POST / */
-  CREATE,
-
-  /** PUT /:id */
-  UPDATE,
-
-  /** DELETE /:id */
-  DELETE
-}
+export type ResourceAction = 'read' | 'list' | 'create' | 'update' | 'delete';
 
 /**
  * A REST resource version of a middleware interface.
@@ -99,6 +84,9 @@ export interface ResourceOptions<T> {
   /** Which REST resource actions should be enabled. */
   actions?: ResourceAction[];
 
+  /** List of public routes */
+  publicActions?: ResourceAction[];
+
   /** Whether to include all associations on the resource. Defaults to false. */
   associations?: boolean;
 
@@ -147,23 +135,18 @@ export class Resource<T extends Model, U> extends Router {
     this.resourceOptions = {
       name: _.kebabCase(this.constructor.name).replace(/-resource$/, ''),
       associations: false,
-      actions: [
-        ResourceAction.LIST,
-        ResourceAction.READ,
-        ResourceAction.CREATE,
-        ResourceAction.UPDATE,
-        ResourceAction.DELETE
-      ],
+      actions: ['list', 'read', 'create', 'update', 'delete'],
+      publicActions: [],
       ... options
     };
 
     for (let action of _.uniq(this.resourceOptions.actions)) {
       switch (action) {
-      case ResourceAction.LIST: this.get('/', this.handleList.bind(this)); break;
-      case ResourceAction.READ: this.get('/:id', this.handleRead.bind(this)); break;
-      case ResourceAction.CREATE: this.post('/', this.handleCreate.bind(this)); break;
-      case ResourceAction.UPDATE: this.put('/:id', this.handleUpdate.bind(this)); break;
-      case ResourceAction.DELETE: this.delete('/:id', this.handleDelete.bind(this)); break;
+      case 'list': this.get('/', this.handleList.bind(this)); break;
+      case 'read': this.get('/:id', this.handleRead.bind(this)); break;
+      case 'create': this.post('/', this.handleCreate.bind(this)); break;
+      case 'update': this.put('/:id', this.handleUpdate.bind(this)); break;
+      case 'delete': this.delete('/:id', this.handleDelete.bind(this)); break;
       }
     }
   }
@@ -465,7 +448,7 @@ export class Resource<T extends Model, U> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleList(ctx: ResourceContext<T>): Promise<any> {
-    return this.process(ctx, [
+    let mileStones = [
       this.beforeListStart,
       this.handleListStart,
       this.afterListStart,
@@ -481,7 +464,13 @@ export class Resource<T extends Model, U> extends Router {
       this.beforeListFinish,
       this.handleListFinish,
       this.afterListFinish
-    ]);
+    ];
+
+    if (!this.resourceOptions.auth || this.resourceOptions.publicActions.indexOf('list') > -1) {
+      mileStones = mileStones.filter(_ => _.name.includes('Auth'));
+    }
+
+    return this.process(ctx, mileStones);
   }
 
   /**
@@ -648,7 +637,7 @@ export class Resource<T extends Model, U> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleRead(ctx: ResourceContext<T>): Promise<any> {
-    return this.process(ctx, [
+    let mileStones = [
       this.beforeReadStart,
       this.handleReadStart,
       this.afterReadStart,
@@ -664,7 +653,13 @@ export class Resource<T extends Model, U> extends Router {
       this.beforeReadFinish,
       this.handleReadFinish,
       this.afterReadFinish
-    ]);
+    ];
+
+    if (!this.resourceOptions.auth || this.resourceOptions.publicActions.indexOf('read') > -1) {
+      mileStones = mileStones.filter(_ => _.name.includes('Auth'));
+    }
+
+    return this.process(ctx, mileStones);
   }
 
   /**
@@ -831,7 +826,7 @@ export class Resource<T extends Model, U> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleCreate(ctx: ResourceContext<T>): Promise<any> {
-    return this.process(ctx, [
+    let mileStones = [
       this.beforeCreateStart,
       this.handleCreateStart,
       this.afterCreateStart,
@@ -847,7 +842,13 @@ export class Resource<T extends Model, U> extends Router {
       this.beforeCreateFinish,
       this.handleCreateFinish,
       this.afterCreateFinish
-    ]);
+    ];
+
+    if (!this.resourceOptions.auth || this.resourceOptions.publicActions.indexOf('create') > -1) {
+      mileStones = mileStones.filter(_ => _.name.includes('Auth'));
+    }
+
+    return this.process(ctx, mileStones);
   }
 
   /**
@@ -1049,7 +1050,7 @@ export class Resource<T extends Model, U> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleUpdate(ctx: ResourceContext<T>): Promise<any> {
-    return this.process(ctx, [
+    let mileStones = [
       this.beforeUpdateStart,
       this.handleUpdateStart,
       this.afterUpdateStart,
@@ -1068,7 +1069,13 @@ export class Resource<T extends Model, U> extends Router {
       this.beforeUpdateFinish,
       this.handleUpdateFinish,
       this.afterUpdateFinish
-    ]);
+    ];
+
+    if (!this.resourceOptions.auth || this.resourceOptions.publicActions.indexOf('update') > -1) {
+      mileStones = mileStones.filter(_ => _.name.includes('Auth'));
+    }
+
+    return this.process(ctx, mileStones);
   }
 
   /**
@@ -1277,7 +1284,7 @@ export class Resource<T extends Model, U> extends Router {
    * @returns A promise handling the request.
    */
   protected async handleDelete(ctx: ResourceContext<T>): Promise<any> {
-    return this.process(ctx, [
+    let mileStones = [
       this.beforeDeleteStart,
       this.handleDeleteStart,
       this.afterDeleteStart,
@@ -1296,6 +1303,12 @@ export class Resource<T extends Model, U> extends Router {
       this.beforeDeleteFinish,
       this.handleDeleteFinish,
       this.afterDeleteFinish
-    ]);
+    ];
+
+    if (!this.resourceOptions.auth || this.resourceOptions.publicActions.indexOf('update') > -1) {
+      mileStones = mileStones.filter(_ => _.name.includes('Auth'));
+    }
+
+    return this.process(ctx, mileStones);
   }
 }

@@ -1,3 +1,7 @@
+# 0.8.0
+
+* Added ability to specify public actions in the resource options
+
 # 0.7.5
 
 * Provide better error tracing when coercing an error

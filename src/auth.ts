@@ -12,10 +12,10 @@ import * as Bluebird from 'bluebird';
 import { RouterContext, Middleware } from './router';
 
 export interface Acl {
-  isAllowed(userId: string, resource: string, permissions: string | string[]): Bluebird<boolean>;
-  addUserRoles(userId: string, roles: string | string[]): Bluebird<void>;
-  removeUserRoles(userId: string, roles: string | string[]): Bluebird<void>;
-  userRoles(userId: string): Bluebird<string[]>;
+  isAllowed(userId: string, resource: string, permissions: string | string[]): Promise<boolean>;
+  addUserRoles(userId: string, roles: string | string[]): Promise<void>;
+  removeUserRoles(userId: string, roles: string | string[]): Promise<void>;
+  userRoles(userId: string): Promise<string[]>;
 }
 
 /** Raised when a user is not found during authentication. */
@@ -294,7 +294,7 @@ export abstract class Auth<T> {
    *
    * @returns The auth initialization middleware.
    */
-  public init(options?: AuthInitOptions): Middleware {
+  public authenticated(options?: AuthInitOptions): Middleware {
     options = {
       header: 'Authorization',
       optional: false,
