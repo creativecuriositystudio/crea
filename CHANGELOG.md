@@ -1,3 +1,7 @@
+# 0.8.3
+
+* Added authentication to resource auth handling
+
 # 0.8.2
 
 * Use Bluebird promise for Acl

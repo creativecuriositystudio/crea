@@ -249,8 +249,10 @@ export class Resource<T extends Model, U> extends Router {
    */
   protected async handleAuth(ctx: ResourceContext<T>, next: () => Promise<any>): Promise<any> {
     return this.resourceOptions.auth ?
-      this.process(ctx, this.resourceOptions.auth.authorised(ctx.resource.name, ctx.resource.actionName), next) :
-      next();
+      this.process(ctx, [
+        this.resourceOptions.auth.authenticated(), 
+        this.resourceOptions.auth.authorised(ctx.resource.name, ctx.resource.actionName)
+      ], next) : next();
   }
 
   /**
