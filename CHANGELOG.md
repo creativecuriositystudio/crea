@@ -1,3 +1,7 @@
+# 0.8.1
+
+* Fixed resource milestone bug
+
 # 0.8.0
 
 * Added ability to specify public actions in the resource options

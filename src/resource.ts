@@ -467,7 +467,7 @@ export class Resource<T extends Model, U> extends Router {
     ];
 
     if (!this.resourceOptions.auth || this.resourceOptions.publicActions.indexOf('list') > -1) {
-      mileStones = mileStones.filter(_ => _.name.includes('Auth'));
+      mileStones = mileStones.filter(_ => !_.name.includes('Auth'));
     }
 
     return this.process(ctx, mileStones);
@@ -656,7 +656,7 @@ export class Resource<T extends Model, U> extends Router {
     ];
 
     if (!this.resourceOptions.auth || this.resourceOptions.publicActions.indexOf('read') > -1) {
-      mileStones = mileStones.filter(_ => _.name.includes('Auth'));
+      mileStones = mileStones.filter(_ => !_.name.includes('Auth'));
     }
 
     return this.process(ctx, mileStones);
@@ -845,7 +845,7 @@ export class Resource<T extends Model, U> extends Router {
     ];
 
     if (!this.resourceOptions.auth || this.resourceOptions.publicActions.indexOf('create') > -1) {
-      mileStones = mileStones.filter(_ => _.name.includes('Auth'));
+      mileStones = mileStones.filter(_ => !_.name.includes('Auth'));
     }
 
     return this.process(ctx, mileStones);
@@ -1072,7 +1072,7 @@ export class Resource<T extends Model, U> extends Router {
     ];
 
     if (!this.resourceOptions.auth || this.resourceOptions.publicActions.indexOf('update') > -1) {
-      mileStones = mileStones.filter(_ => _.name.includes('Auth'));
+      mileStones = mileStones.filter(_ => !_.name.includes('Auth'));
     }
 
     return this.process(ctx, mileStones);
@@ -1306,7 +1306,7 @@ export class Resource<T extends Model, U> extends Router {
     ];
 
     if (!this.resourceOptions.auth || this.resourceOptions.publicActions.indexOf('update') > -1) {
-      mileStones = mileStones.filter(_ => _.name.includes('Auth'));
+      mileStones = mileStones.filter(_ => !_.name.includes('Auth'));
     }
 
     return this.process(ctx, mileStones);
