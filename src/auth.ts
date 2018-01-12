@@ -7,14 +7,15 @@
  */
 import { decode, encode } from 'jwt-simple';
 import * as moment from 'moment';
+import * as Bluebird from 'bluebird';
 
 import { RouterContext, Middleware } from './router';
 
 export interface Acl {
-  isAllowed(userId: string, resource: string, permissions: string | string[]): Promise<boolean>;
-  addUserRoles(userId: string, roles: string | string[]): Promise<void>;
-  removeUserRoles(userId: string, roles: string | string[]): Promise<void>;
-  userRoles(userId: string): Promise<string[]>;
+  isAllowed(userId: string, resource: string, permissions: string | string[]): Bluebird<boolean>;
+  addUserRoles(userId: string, roles: string | string[]): Bluebird<void>;
+  removeUserRoles(userId: string, roles: string | string[]): Bluebird<void>;
+  userRoles(userId: string): Bluebird<string[]>;
 }
 
 /** Raised when a user is not found during authentication. */

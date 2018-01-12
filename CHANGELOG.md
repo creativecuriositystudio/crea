@@ -1,3 +1,7 @@
+# 0.8.2
+
+* Use Bluebird promise for Acl
+
 # 0.8.1
 
 * Fixed resource milestone bug
